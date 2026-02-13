@@ -58,8 +58,8 @@ RUN apt-get update \
         iproute2 \
         netcat-openbsd \
         telnet \
-    && playwright install-deps chromium \
-    && playwright install chromium \
+    && uv run playwright install-deps chromium \
+    && uv run playwright install chromium \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
