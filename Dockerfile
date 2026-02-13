@@ -25,8 +25,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
-# 只下载 Playwright 的 Chromium 浏览器，系统依赖在下一阶段安装
-RUN playwright install chromium
+
 
 # Stage 3: Create the final, lean image
 FROM python:3.11-slim-bookworm
@@ -60,11 +59,11 @@ RUN apt-get update \
         netcat-openbsd \
         telnet \
     && playwright install-deps chromium \
+    && playwright install chromium \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 从 builder 阶段复制预先下载好的浏览器
-COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
+
 
 # 复制前端构建产物到 /app/dist
 COPY --from=frontend-builder /dist /app/dist
