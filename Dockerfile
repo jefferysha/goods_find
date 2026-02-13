@@ -7,26 +7,6 @@ RUN pnpm install --frozen-lockfile
 COPY web-ui/ .
 RUN pnpm run build
 
-# Stage 2: Build the python environment with dependencies (uv)
-FROM python:3.11-slim-bookworm AS builder
-
-# 设置环境变量以防止交互式提示
-ENV DEBIAN_FRONTEND=noninteractive
-
-# 安装 uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
-# 创建虚拟环境
-ENV VIRTUAL_ENV=/opt/venv
-RUN uv venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-# 安装 Python 依赖
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev
-
-
-
 # Stage 3: Create the final, lean image
 FROM python:3.11-slim-bookworm
 
@@ -41,6 +21,18 @@ ENV RUNNING_IN_DOCKER=true
 ENV PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
 # 设置时区为中国时区
 ENV TZ=Asia/Shanghai
+
+# 安装 uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# 创建虚拟环境
+ENV VIRTUAL_ENV=/opt/venv
+RUN uv venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# 安装 Python 依赖
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
 
 # 从 builder 阶段复制虚拟环境，这样我们就可以使用 playwright 命令
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
@@ -62,8 +54,6 @@ RUN apt-get update \
     && uv run playwright install chromium \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-
 
 # 复制前端构建产物到 /app/dist
 COPY --from=frontend-builder /dist /app/dist
