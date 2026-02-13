@@ -1,0 +1,21 @@
+[
+  {
+    "task_name": "科比手办",
+    "enabled": false,
+    "keyword": "科比手办",
+    "description": "科比手办",
+    "max_pages": 30,
+    "personal_only": true,
+    "min_price": "50",
+    "max_price": "100",
+    "cron": "* * * * *",
+    "ai_prompt_base_file": "prompts/base_prompt.txt",
+    "ai_prompt_criteria_file": "prompts/科比手办_criteria.txt",
+    "account_state_file": "state/shajunyi.json",
+    "free_shipping": true,
+    "new_publish_option": null,
+    "region": null,
+    "platform": "xianyu",
+    "is_running": false
+  }
+]

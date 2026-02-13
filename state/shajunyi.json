@@ -1,0 +1,267 @@
+{
+  "capturedAt": "2026-02-12T15:15:37.360Z",
+  "pageUrl": "https://www.goofish.com/",
+  "page": {
+    "pageUrl": "https://www.goofish.com/",
+    "referrer": "https://www.goofish.com/",
+    "visibilityState": "visible"
+  },
+  "env": {
+    "navigator": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+      "platform": "MacIntel",
+      "language": "zh-CN",
+      "languages": [
+        "zh-CN",
+        "en"
+      ],
+      "hardwareConcurrency": 10,
+      "deviceMemory": 8,
+      "maxTouchPoints": 0,
+      "webdriver": false,
+      "doNotTrack": null,
+      "userAgentData": {
+        "brands": [
+          {
+            "brand": "Not(A:Brand",
+            "version": "8"
+          },
+          {
+            "brand": "Chromium",
+            "version": "144"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "144"
+          }
+        ],
+        "mobile": false,
+        "platform": "macOS"
+      }
+    },
+    "screen": {
+      "width": 3440,
+      "height": 1440,
+      "devicePixelRatio": 1,
+      "colorDepth": 24
+    },
+    "intl": {
+      "timeZone": "Asia/Shanghai",
+      "locale": "zh-CN"
+    }
+  },
+  "storage": {
+    "local": {
+      "APLUS_CNA": "20260212_7Y35ISNrTR8CAdpSjty6nNZP",
+      "APLUS_LS_KEY": "[\"APLUS_S_CORE_1.0.20_20260108171550_4acefc95\"]",
+      "ETLCD": "false",
+      "PC_SITE_announcementTime": "2025/11/18 14:00:00",
+      "PC_SITE_browseDetailTotal": "0",
+      "PC_SITE_browseTimes": "reset",
+      "PC_SITE_lastOpenTime": "1770480179017",
+      "PC_SITE_loginSettings": "{\"status\":200,\"canOpenLongLogin\":true,\"hasLongTokenLogin\":false,\"occurError\":false}",
+      "PC_SITE_searchHistory": "[\"iPhone\",\"antigravity 代充\",\"antigravity号ultra\",\"antigravity号\",\"妙码学院\",\"妙码\"]",
+      "PC_SITE_searchTotalTimes": "0",
+      "PC_SITE_survey_first_views_time": "2026-02-12 13:41:39",
+      "PC_SITE_survey_page_views": "3",
+      "_lib_auto_login_havana_storage_arms_api_key_": "9ianbu_autoLogin_1f8e3e531bc",
+      "auyst": "1764603252",
+      "dx-isSupportWebp": "true",
+      "lswucn": "T2gA6m1TT-AkiJlEEq-g5FapSoqDOTYVKNOQPCm_ZjhRbc3_r6_fOGjMtJMIlWpymuE=@@1770652349",
+      "syfhs": "1184010788",
+      "tfstk__": "glxqaSACdGA5DOhHLpjZYOdbpojAfGlQ_h11IdvGhsf0coNMzBARGFTfGR8ysQQfihJTbOvM6xCsH49vHGIiOXTZAKpA5tzUXbsiILj1QoYM-69vHGe8F50BrKnZV71FIGAGqaXCnGVGStDPqOXOjobgmzVlwOjGjNbMETXAQ14gjGDyE_BGj1AGjYSlwOjGsCji6wRMMY5OoxfXAaNjCO7VtKfzbKKPnZzvn_rgj38Pu6xCalqM4tJG0u84mD5klFxfqncu1gvpPIXPYcyNUeJlmtRtvoIDKLYGuhu_p1LyEe_yy-MAUnJeb97-S51183xfDUlUA6YJIh7kHXzdFFvBcFRjwlfX8LAPR3N7Agx2gnbPxgrb6TcjUhL4sP7ceT5IUYkGg7yvHvfRDPUOz4BPOAqgSPVQTla2cQaTWaJhU6Meg"
+    },
+    "session": {
+      "__accs_device": "2313442974_719"
+    }
+  },
+  "meta": {
+    "droppedStorageKeys": {
+      "local": [
+        "APLUS_S_CORE_1.0.20_20260108171550_4acefc95",
+        "PC_SITE_idlefish_im_emoji_data"
+      ],
+      "session": []
+    }
+  },
+  "headers": {
+    "sec-ch-ua-platform": "\"macOS\"",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "sec-ch-ua": "\"Not(A:Brand\";v=\"8\", \"Chromium\";v=\"144\", \"Google Chrome\";v=\"144\"",
+    "sec-ch-ua-mobile": "?0",
+    "Accept": "*/*",
+    "Sec-Fetch-Site": "same-origin",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Dest": "empty",
+    "Referer": "https://www.goofish.com/",
+    "Accept-Encoding": "gzip, deflate, br, zstd",
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8"
+  },
+  "cookies": [
+    {
+      "name": "t",
+      "value": "dca46beac47ff5bfb6ffd9ac2f8f96c3",
+      "domain": ".goofish.com",
+      "path": "/",
+      "expires": 1778456703.437283,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "tracknick",
+      "value": "saberglory",
+      "domain": ".goofish.com",
+      "path": "/",
+      "expires": 1802474126.297621,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "havana_lgc2_77",
+      "value": "eyJoaWQiOjIxOTgwMzYwMzAsInNnIjoiMDhiMDA3OTNjODVmMWUyYmZjZWI0M2ZlMzEyM2QwYjEiLCJzaXRlIjo3NywidG9rZW4iOiIxRVd2VUlTcVdKMkdHY2o2TkFGYTRaZyJ9",
+      "domain": ".goofish.com",
+      "path": "/",
+      "expires": 1771739922.531167,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_hvn_lgc_",
+      "value": "77",
+      "domain": ".goofish.com",
+      "path": "/",
+      "expires": 1771739922.531196,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "havana_lgc_exp",
+      "value": "1771711122556",
+      "domain": ".goofish.com",
+      "path": "/",
+      "expires": 1771739922.531227,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "cna",
+      "value": "7Y35ISNrTR8CAdpSjty6nNZP",
+      "domain": ".goofish.com",
+      "path": "/",
+      "expires": 1803679725.10211,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "unb",
+      "value": "2198036030",
+      "domain": ".goofish.com",
+      "path": "/",
+      "expires": 1771197326.297708,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "cookie2",
+      "value": "2c4573552ff70eb1cf9d1c99c608f5d6",
+      "domain": ".goofish.com",
+      "path": "/",
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "xlly_s",
+      "value": "1",
+      "domain": ".goofish.com",
+      "path": "/",
+      "expires": 1770911103,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_samesite_flag_",
+      "value": "true",
+      "domain": ".goofish.com",
+      "path": "/",
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_tb_token_",
+      "value": "e3ee885e393da",
+      "domain": ".goofish.com",
+      "path": "/",
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_m_h5_tk",
+      "value": "ea1d122d1b81addafa8af9da6a350e33_1770919403768",
+      "domain": ".goofish.com",
+      "path": "/",
+      "expires": 1770914723.791817,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_m_h5_tk_enc",
+      "value": "9d0bc2d2737a534c5464db22ce18d803",
+      "domain": ".goofish.com",
+      "path": "/",
+      "expires": 1770914723.791854,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "sgcookie",
+      "value": "E100OXDv4QG0uAzzma%2BXyeZrBd0%2BMqzwHdDx006%2FWCBrXS0dpZpBTs14AozR5P%2FEM891a6lKyK5E1cMXSXbBT%2FlHR9Bcl75yCI%2Bh0hhGxxsrMcQ%3D",
+      "domain": ".goofish.com",
+      "path": "/",
+      "expires": 1802474126.297572,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "csg",
+      "value": "81cee3ec",
+      "domain": ".goofish.com",
+      "path": "/",
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "sdkSilent",
+      "value": "1770995726310",
+      "domain": ".goofish.com",
+      "path": "/",
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "tfstk",
+      "value": "gkkZaS07V-0QBoLo4022Uo312O2Th-85uxabmmm0fP4GCO_mT40L5jG_5ilEo2F_SxoA3ommkhUXXBitX-eDPUG2FcnTGl5PHewDmD2b0OcmZzitX-IdAZAStcp2dwazm-00KWqu2-b0ilxUKoqYnOVcI6b3Jo20nSVmxkqT0rfcn-xExyE0nr00nHy3Jo20oq2m6aumWHzYsh4sFW_1JoVarc4F3cHUj55tjyWcnvlU_z2b8tXmLlo0Q9lNILzn1jD_KAYhlJm-OVqUUKS4Ybo3IluveOeiqDc0_xRf2rhExbNE9GtTYAor3uPpiZabavD_BX8PFzcKmxPnXU58AjmSCju6Jt4saD0UNv_CFJDZ7AVUEg8fkkY6YxhNosPgvkzWYH-07wStX34LBsCYTBEUPnXcisb5zt1ZC21AMWouYztr7",
+      "domain": ".goofish.com",
+      "path": "/",
+      "expires": 1786461327,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ]
+}

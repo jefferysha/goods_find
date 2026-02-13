@@ -1,0 +1,67 @@
+[project]
+name = "ai-goofish-monitor"
+version = "2.0.0"
+description = "基于 Playwright + AI 的闲鱼智能监控机器人"
+requires-python = ">=3.10"
+dependencies = [
+    "python-dotenv",
+    "playwright",
+    "requests",
+    "openai",
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic-settings",
+    "jinja2",
+    "aiofiles",
+    "python-socks",
+    "apscheduler",
+    "httpx[socks]",
+    "pillow",
+    "pyzbar",
+    "qrcode",
+    "aiosqlite",
+    "pyjwt>=2.11.0",
+    "bcrypt>=5.0.0",
+    "python-multipart>=0.0.22",
+    "psutil>=6.1.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "coverage",
+]
+
+[project.scripts]
+monitor = "src.app:main"
+spider = "spider_v2:main"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "coverage",
+    "httpx>=0.28.1",
+    "anyio>=4.12.1",
+    "pytest-anyio>=0.0.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "-v --tb=short"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["src"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
