@@ -34,9 +34,6 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
-# 从 builder 阶段复制虚拟环境，这样我们就可以使用 playwright 命令
-COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
-
 # 安装所有运行浏览器所需的系统级依赖（包括libzbar0）和网络诊断工具
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
