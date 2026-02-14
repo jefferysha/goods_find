@@ -53,7 +53,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制前端构建产物到 /app/dist
-COPY --from=frontend-builder /dist /app/dist
+COPY --from=frontend-builder /web-ui/dist /app/dist
 
 # 复制应用代码
 # .dockerignore 文件会处理排除项
