@@ -12,8 +12,6 @@ FROM python:3.11-slim-bookworm
 
 # 设置工作目录和环境变量
 WORKDIR /app
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 # 新增环境变量，用于区分Docker环境和本地环境
 ENV RUNNING_IN_DOCKER=true
@@ -25,14 +23,12 @@ ENV TZ=Asia/Shanghai
 # 安装 uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# 创建虚拟环境
-ENV VIRTUAL_ENV=/opt/venv
-RUN uv venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
 # 安装 Python 依赖
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
+
+# 确保虚拟环境路径
+ENV PATH="/app/.venv/bin:$PATH"
 
 # 安装所有运行浏览器所需的系统级依赖（包括libzbar0）和网络诊断工具
 RUN apt-get update \
