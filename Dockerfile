@@ -23,12 +23,16 @@ ENV TZ=Asia/Shanghai
 # 安装 uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# 安装 Python 依赖
+# 复制依赖文件并安装
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
-# 确保虚拟环境路径
+# 确保使用虚拟环境中的 Python（必须在 uv sync 之后设置）
 ENV PATH="/app/.venv/bin:$PATH"
+ENV VIRTUAL_ENV="/app/.venv"
+
+# 验证 fastapi 是否正确安装
+RUN python -c "import fastapi; print(f'FastAPI {fastapi.__version__} installed successfully')"
 
 # 安装所有运行浏览器所需的系统级依赖（包括libzbar0）和网络诊断工具
 RUN apt-get update \
@@ -62,4 +66,5 @@ EXPOSE 8000
 ENTRYPOINT ["tini", "--"]
 
 # 容器启动时执行的命令
-CMD ["python", "-m", "src.app"]
+# 使用 uvicorn 直接启动，监听 $PORT 或默认 8000
+CMD ["sh", "-c", "uvicorn src.app:app --host 0.0.0.0 --port ${PORT:-8000}"]
