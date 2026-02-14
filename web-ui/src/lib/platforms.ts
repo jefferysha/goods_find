@@ -45,6 +45,14 @@ export const PLATFORMS: Record<PlatformId, PlatformInfo> = {
     enabled: false,
     description: '淘宝二手市场',
   },
+  mercari: {
+    id: 'mercari',
+    name: 'Mercari(煤炉)',
+    icon: 'mercari',
+    color: '#FF0211',
+    enabled: true,
+    description: '日本最大的二手交易平台',
+  },
 }
 
 /** 获取所有平台列表 */

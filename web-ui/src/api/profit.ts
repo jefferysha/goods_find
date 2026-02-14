@@ -27,3 +27,40 @@ export async function getProfitByAssignee(filters?: ProfitFilters): Promise<Assi
 export async function getDailyProfit(days?: number, assignee?: string): Promise<DailyProfit[]> {
   return http('/api/profit/daily-trend', { params: { days, assignee } })
 }
+
+export interface ROIOverview {
+  total_cost: number
+  total_revenue: number
+  total_profit: number
+  overall_roi: number
+  avg_holding_days: number
+  count: number
+  keyword_ranking: Array<{
+    keyword: string
+    total_cost: number
+    total_profit: number
+    roi: number
+    sold_count?: number
+  }>
+}
+
+export interface ItemROI {
+  purchase_price: number
+  total_cost: number
+  effective_price: number
+  profit: number
+  roi: number
+  daily_roi: number
+  annualized_roi: number
+  holding_days: number
+  estimated: boolean
+  item_id: string
+}
+
+export async function getROIOverview(filters?: ProfitFilters): Promise<ROIOverview> {
+  return http('/api/profit/roi-overview', { params: filters as Record<string, any> })
+}
+
+export async function getItemROI(itemId: string): Promise<ItemROI> {
+  return http(`/api/profit/roi-item/${itemId}`)
+}

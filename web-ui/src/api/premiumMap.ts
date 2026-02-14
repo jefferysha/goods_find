@@ -1,5 +1,12 @@
 import { http } from './http'
 
+export interface PlatformStat {
+  count: number
+  median_price: number
+  min_price: number
+  max_price: number
+}
+
 export interface CategoryOverview {
   id: string
   category_name: string
@@ -11,6 +18,7 @@ export interface CategoryOverview {
   good_deal_count: number
   purchase_range: [number | null, number | null]
   new_price?: number
+  platform_stats?: Record<string, PlatformStat>
 }
 
 export interface PriceBin {

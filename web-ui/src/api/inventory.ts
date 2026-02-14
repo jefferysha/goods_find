@@ -44,3 +44,21 @@ export async function markSold(itemId: number, soldPrice: number, soldChannel: s
 export async function deleteInventory(itemId: number): Promise<void> {
   await http(`/api/inventory/${itemId}`, { method: 'DELETE' })
 }
+
+export interface PricingSuggestion {
+  quick_sell_price: number | null
+  max_profit_price: number | null
+  median_price: number | null
+  min_price: number | null
+  max_price: number | null
+  sample_count: number
+  estimated_profit_quick: number | null
+  estimated_profit_max: number | null
+  item_id: string
+  keyword: string
+  condition: string
+}
+
+export async function getPricingSuggestion(itemId: string, condition: string = 'good'): Promise<PricingSuggestion> {
+  return http(`/api/inventory/${itemId}/pricing-suggestion`, { params: { condition } })
+}

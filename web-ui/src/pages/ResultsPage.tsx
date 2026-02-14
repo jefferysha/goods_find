@@ -2,22 +2,15 @@ import { useState, useMemo, useCallback } from 'react'
 import { useResults, type ResultFilters } from '@/hooks/results/useResults'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { getAllPlatforms, getPlatformColor } from '@/lib/platforms'
-import { parsePriceNumber, calculatePremiumRate, getPriceLevel } from '@/lib/pricing-utils'
+import { getAllPlatforms } from '@/lib/platforms'
+import { parsePriceNumber } from '@/lib/pricing-utils'
 import type { ResultItem } from '@/types/result'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -35,8 +28,9 @@ import {
 } from '@/components/ui/dialog'
 import { PlatformBadge, PlatformTabs } from '@/components/common/PlatformBadge'
 import { createMarketPrice } from '@/api/pricing'
-import { LayoutGrid, List, ShoppingCart } from 'lucide-react'
+import { LayoutGrid, List, ShoppingCart, ExternalLink, Tag, GitCompareArrows, X, Check } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import { createPurchase } from '@/api/purchases'
 
 // ─── Price Level Config ──────────────────────────────────────
@@ -217,8 +211,24 @@ function SetPriceDialog({ open, onOpenChange, item, onSuccess }: SetPriceDialogP
   )
 }
 
+// ─── Evaluation Status Config ────────────────────────────────
+const EVAL_STATUS_CONFIG: Record<string, { label: string; className: string; icon: string }> = {
+  great_deal: { label: '超值捡漏', className: 'bg-emerald-500 text-white', icon: '🔥' },
+  good_deal: { label: '可收', className: 'bg-green-500 text-white', icon: '✓' },
+  overpriced: { label: '偏高', className: 'bg-orange-100 text-orange-700', icon: '↑' },
+  no_config: { label: '未评估', className: 'bg-gray-100 text-gray-500', icon: '–' },
+}
+
 // ─── Result Card ─────────────────────────────────────────────
-function ResultCard({ item, onSetPrice, onAddToPurchase }: { item: ResultItem; onSetPrice: (item: ResultItem) => void; onAddToPurchase: (item: ResultItem) => void }) {
+interface ResultCardProps {
+  item: ResultItem
+  onSetPrice: (item: ResultItem) => void
+  onAddToPurchase: (item: ResultItem) => void
+  selected?: boolean
+  onToggleSelect?: (item: ResultItem) => void
+}
+
+function ResultCard({ item, onSetPrice, onAddToPurchase, selected, onToggleSelect }: ResultCardProps) {
   const [expanded, setExpanded] = useState(false)
 
   const info = item.商品信息
@@ -227,127 +237,376 @@ function ResultCard({ item, onSetPrice, onAddToPurchase }: { item: ResultItem; o
   const platform = item.platform || 'xianyu'
 
   const isRecommended = ai?.is_recommended === true
-  const recommendationText = isRecommended ? '推荐' : ai?.is_recommended === false ? '不推荐' : '待定'
   const imageUrl = info.商品图片列表?.[0] || info.商品主图链接 || ''
-  const crawlTime = item.爬取时间 ? new Date(item.爬取时间).toLocaleString('sv-SE') : '未知'
   const publishTime = info.发布时间 || '未知'
 
-  return (
-    <Card className="flex h-full flex-col overflow-hidden">
-      <CardHeader className="relative">
-        {/* Platform badge - top left */}
-        <div className="absolute left-2 top-2 z-10">
-          <PlatformBadge platformId={platform} size="sm" />
-        </div>
+  // 价格本评估数据
+  const evalStatus = item.evaluation_status || 'no_config'
+  const evalConfig = EVAL_STATUS_CONFIG[evalStatus] || EVAL_STATUS_CONFIG.no_config
+  const hasEvaluation = item.evaluation_status && item.evaluation_status !== 'no_config'
+  const profitRate = item.estimated_profit_rate != null ? (item.estimated_profit_rate * 100).toFixed(1) : null
 
-        <div className="-mx-6 -mt-6 aspect-[4/3] overflow-hidden rounded-t-lg bg-muted">
+  return (
+    <Card className={cn(
+      'group flex h-full flex-col overflow-hidden transition-all hover:shadow-lg',
+      selected && 'ring-2 ring-blue-500 shadow-blue-100'
+    )}>
+      {/* ── 第1层：图片 ── */}
+      <div className="relative">
+        <div className="aspect-[4/3] overflow-hidden bg-muted">
           <a href={info.商品链接} target="_blank" rel="noopener noreferrer">
             <img
               src={imageUrl}
               alt={info.商品标题}
-              className="h-full w-full object-cover transition-transform hover:scale-105"
+              className="h-full w-full object-cover transition-transform group-hover:scale-105"
               loading="lazy"
             />
           </a>
         </div>
-        <CardTitle className="pt-4">
-          <a href={info.商品链接} target="_blank" rel="noopener noreferrer" className="line-clamp-2 text-sm hover:text-blue-600">
-            {info.商品标题}
-          </a>
-        </CardTitle>
 
-        {/* Price */}
-        <CardDescription className="!mt-2 space-y-1">
-          <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold text-red-600">{info.当前售价}</span>
-            {info.商品原价 && (
-              <span className="text-sm text-muted-foreground line-through">{info.商品原价}</span>
+        {/* 左上：选中框 + 平台 */}
+        <div className="absolute left-2 top-2 flex items-center gap-1.5">
+          {onToggleSelect && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleSelect(item) }}
+              className={cn(
+                'flex h-5 w-5 items-center justify-center rounded border-2 transition-colors',
+                selected
+                  ? 'border-blue-500 bg-blue-500 text-white'
+                  : 'border-white/80 bg-black/30 text-transparent hover:border-blue-400 hover:bg-blue-400/30 hover:text-white'
+              )}
+            >
+              <Check className="h-3 w-3" />
+            </button>
+          )}
+          <PlatformBadge platformId={platform} size="sm" />
+        </div>
+
+        {/* 右上：AI推荐标记 */}
+        <div className="absolute right-2 top-2">
+          {isRecommended ? (
+            <span className="rounded-full bg-green-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+              AI推荐
+            </span>
+          ) : ai?.is_recommended === false ? (
+            <span className="rounded-full bg-red-500/80 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+              不推荐
+            </span>
+          ) : null}
+        </div>
+
+        {/* 左下：评估状态 */}
+        {hasEvaluation && (
+          <div className="absolute bottom-2 left-2">
+            <span className={cn('rounded-full px-2.5 py-1 text-[10px] font-bold shadow-sm', evalConfig.className)}>
+              {evalConfig.icon} {evalConfig.label}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* ── 第2层：标题 + 价格 + 利润 ── */}
+      <div className="space-y-2 px-4 pt-3">
+        <a
+          href={info.商品链接}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="line-clamp-2 text-sm font-medium leading-snug text-foreground hover:text-blue-600"
+        >
+          {info.商品标题}
+        </a>
+
+        <div className="flex items-end justify-between">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-lg font-bold text-red-600">{info.当前售价}</span>
+            {info.商品原价 && info.商品原价 !== '暂无' && (
+              <span className="text-xs text-muted-foreground line-through">{info.商品原价}</span>
             )}
           </div>
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="flex-grow space-y-3">
-        {/* AI Recommendation */}
-        <div
-          className={cn(
-            'rounded-md border p-3 text-sm',
-            isRecommended ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50',
-          )}
-        >
-          <p className={cn('font-semibold', isRecommended ? 'text-green-800' : 'text-red-800')}>
-            AI建议: {recommendationText}
-          </p>
-          <p className={cn('mt-1 text-gray-600', !expanded && 'line-clamp-3')}>
-            原因: {ai?.reason || '无'}
-          </p>
-          {ai?.reason && (
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="mt-1 text-xs text-blue-600 hover:underline"
-            >
-              {expanded ? '收起' : '展开'}
-            </button>
+          {item.estimated_profit != null ? (
+            <div className="text-right">
+              <span className={cn(
+                'text-sm font-bold',
+                item.estimated_profit > 0 ? 'text-emerald-600' : 'text-red-500'
+              )}>
+                {item.estimated_profit > 0 ? '+' : ''}¥{item.estimated_profit.toFixed(0)}
+              </span>
+              {profitRate && (
+                <span className="ml-1 text-[10px] text-muted-foreground">
+                  ({item.estimated_profit_rate! > 0 ? '+' : ''}{profitRate}%)
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className="text-[10px] text-muted-foreground">未配置价格本</span>
           )}
         </div>
+      </div>
 
-        {/* Risk tags */}
-        {ai?.risk_tags && ai.risk_tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {ai.risk_tags.map((tag, idx) => (
-              <span key={idx} className="rounded-md border border-red-200 bg-red-50 px-1.5 py-0.5 text-[10px] text-red-600">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+      {/* ── 第3层：风险标签 + 商品标签 ── */}
+      <div className="flex flex-wrap gap-1 px-4 pt-2">
+        {ai?.risk_tags && ai.risk_tags.length > 0 && ai.risk_tags.map((tag, idx) => (
+          <span key={`risk-${idx}`} className="rounded bg-red-50 px-1.5 py-0.5 text-[10px] text-red-600 border border-red-100">
+            {tag}
+          </span>
+        ))}
+        {info.商品标签 && info.商品标签.slice(0, 3).map((tag, idx) => (
+          <span key={`tag-${idx}`} className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+            {tag}
+          </span>
+        ))}
+      </div>
 
-        {/* Tags */}
-        {info.商品标签 && info.商品标签.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {info.商品标签.slice(0, 4).map((tag, idx) => (
-              <span key={idx} className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Estimated Profit - placeholder based on price diff */}
-        <div className="rounded-md bg-blue-50 border border-blue-200 p-2 text-sm">
-          <span className="text-blue-700 font-medium">预估利润区间需配置价格本</span>
+      {/* ── 第4层：AI 理由（可展开） ── */}
+      {ai?.reason && (
+        <div className="px-4 pt-2">
+          <button onClick={() => setExpanded(!expanded)} className="w-full text-left">
+            <p className={cn('text-xs text-muted-foreground leading-relaxed', !expanded && 'line-clamp-2')}>
+              {ai.reason}
+            </p>
+            <span className="text-[10px] text-blue-500 hover:underline">
+              {expanded ? '收起' : '展开详情'}
+            </span>
+          </button>
         </div>
-      </CardContent>
+      )}
 
-      <CardFooter className="flex flex-col gap-3 text-xs text-muted-foreground">
-        <div className="flex w-full items-center justify-between">
-          <div className="space-y-0.5">
-            <span className="block">卖家: {seller.卖家昵称 || info.卖家昵称 || '未知'}</span>
-            <span className="block">发布: {publishTime}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onAddToPurchase(item)}
-              className="text-[11px] text-blue-600 hover:underline flex items-center gap-0.5"
-              title="加入采购清单"
-            >
-              <ShoppingCart className="h-3 w-3" />
-              加入采购
-            </button>
-            <button
-              onClick={() => onSetPrice(item)}
-              className="text-[11px] text-orange-600 hover:underline"
-              title="将此商品价格设为品类基准价"
-            >
-              设为基准价
-            </button>
-            <a href={info.商品链接} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
-              详情
+      {/* ── 第5层：底部信息 + 图标按钮 ── */}
+      <div className="mt-auto border-t px-4 py-2">
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+          <span className="truncate max-w-[120px]">{seller.卖家昵称 || info.卖家昵称 || '未知'}</span>
+          <span className="shrink-0">{publishTime}</span>
+        </div>
+        <div className="mt-1.5 flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 flex-1 text-xs"
+            onClick={() => onAddToPurchase(item)}
+          >
+            <ShoppingCart className="mr-1 h-3 w-3" />
+            采购
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 flex-1 text-xs"
+            onClick={() => onSetPrice(item)}
+          >
+            <Tag className="mr-1 h-3 w-3" />
+            基准价
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 w-7 p-0 shrink-0"
+            asChild
+          >
+            <a href={info.商品链接} target="_blank" rel="noopener noreferrer" title="查看详情">
+              <ExternalLink className="h-3.5 w-3.5" />
             </a>
+          </Button>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+// ─── Compare Panel ──────────────────────────────────────────
+function ComparePanel({ items, onClose, onRemove }: {
+  items: ResultItem[]
+  onClose: () => void
+  onRemove: (id: string) => void
+}) {
+  if (items.length === 0) return null
+
+  // 找出最低价
+  const prices = items.map(i => parsePriceNumber(i.商品信息.当前售价))
+  const minPrice = Math.min(...prices)
+
+  return (
+    <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <GitCompareArrows className="h-5 w-5" />
+            商品对比分析
+            <Badge variant="secondary">{items.length} 件</Badge>
+          </DialogTitle>
+          <DialogDescription>跨平台商品对比，找出最优选择</DialogDescription>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-auto">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="sticky left-0 bg-muted/50 px-3 py-2 text-left font-medium w-[140px]">对比项</th>
+                  {items.map((item) => (
+                    <th key={item.商品信息.商品ID} className="min-w-[200px] px-3 py-2">
+                      <div className="relative">
+                        <button
+                          onClick={() => onRemove(item.商品信息.商品ID)}
+                          className="absolute -right-1 -top-1 rounded-full bg-muted p-0.5 hover:bg-destructive hover:text-destructive-foreground"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                        <img
+                          src={item.商品信息.商品图片列表?.[0] || item.商品信息.商品主图链接 || ''}
+                          alt=""
+                          className="mx-auto h-20 w-20 rounded-md object-cover"
+                        />
+                        <p className="mt-1 line-clamp-2 text-xs font-normal text-left">{item.商品信息.商品标题}</p>
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {/* 平台 */}
+                <tr>
+                  <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground">平台</td>
+                  {items.map((item) => (
+                    <td key={item.商品信息.商品ID} className="px-3 py-2">
+                      <PlatformBadge platformId={item.platform || 'xianyu'} size="sm" />
+                    </td>
+                  ))}
+                </tr>
+                {/* 价格 */}
+                <tr>
+                  <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground">价格</td>
+                  {items.map((item) => {
+                    const price = parsePriceNumber(item.商品信息.当前售价)
+                    const isMin = price === minPrice && items.length > 1
+                    return (
+                      <td key={item.商品信息.商品ID} className="px-3 py-2">
+                        <span className={cn('text-base font-bold', isMin ? 'text-emerald-600' : 'text-red-600')}>
+                          {item.商品信息.当前售价}
+                        </span>
+                        {isMin && <Badge className="ml-1 bg-emerald-500 text-[10px]">最低</Badge>}
+                      </td>
+                    )
+                  })}
+                </tr>
+                {/* 预估利润 */}
+                <tr>
+                  <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground">预估利润</td>
+                  {items.map((item) => (
+                    <td key={item.商品信息.商品ID} className="px-3 py-2">
+                      {item.estimated_profit != null ? (
+                        <span className={cn('font-semibold', item.estimated_profit > 0 ? 'text-emerald-600' : 'text-red-500')}>
+                          {item.estimated_profit > 0 ? '+' : ''}¥{item.estimated_profit.toFixed(0)}
+                          {item.estimated_profit_rate != null && (
+                            <span className="ml-1 text-xs font-normal text-muted-foreground">
+                              ({(item.estimated_profit_rate * 100).toFixed(1)}%)
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+                {/* 评估状态 */}
+                <tr>
+                  <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground">评估</td>
+                  {items.map((item) => {
+                    const cfg = EVAL_STATUS_CONFIG[item.evaluation_status || 'no_config'] || EVAL_STATUS_CONFIG.no_config
+                    return (
+                      <td key={item.商品信息.商品ID} className="px-3 py-2">
+                        <span className={cn('inline-block rounded-full px-2 py-0.5 text-[10px] font-bold', cfg.className)}>
+                          {cfg.icon} {cfg.label}
+                        </span>
+                      </td>
+                    )
+                  })}
+                </tr>
+                {/* AI建议 */}
+                <tr>
+                  <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground">AI建议</td>
+                  {items.map((item) => {
+                    const isRec = item.ai_analysis?.is_recommended
+                    return (
+                      <td key={item.商品信息.商品ID} className="px-3 py-2">
+                        <span className={cn('font-semibold', isRec ? 'text-green-600' : isRec === false ? 'text-red-600' : 'text-muted-foreground')}>
+                          {isRec ? '推荐' : isRec === false ? '不推荐' : '未分析'}
+                        </span>
+                      </td>
+                    )
+                  })}
+                </tr>
+                {/* AI 理由 */}
+                <tr>
+                  <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground">分析理由</td>
+                  {items.map((item) => (
+                    <td key={item.商品信息.商品ID} className="px-3 py-2 text-xs text-muted-foreground max-w-[240px]">
+                      {item.ai_analysis?.reason || '—'}
+                    </td>
+                  ))}
+                </tr>
+                {/* 风险标签 */}
+                <tr>
+                  <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground">风险标签</td>
+                  {items.map((item) => (
+                    <td key={item.商品信息.商品ID} className="px-3 py-2">
+                      <div className="flex flex-wrap gap-1">
+                        {item.ai_analysis?.risk_tags?.length ? item.ai_analysis.risk_tags.map((t, i) => (
+                          <span key={i} className="rounded bg-red-50 px-1.5 py-0.5 text-[10px] text-red-600 border border-red-100">{t}</span>
+                        )) : <span className="text-muted-foreground text-xs">无</span>}
+                      </div>
+                    </td>
+                  ))}
+                </tr>
+                {/* 卖家 */}
+                <tr>
+                  <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground">卖家</td>
+                  {items.map((item) => (
+                    <td key={item.商品信息.商品ID} className="px-3 py-2 text-xs">
+                      {item.卖家信息.卖家昵称 || item.商品信息.卖家昵称 || '未知'}
+                    </td>
+                  ))}
+                </tr>
+                {/* 卖家好评率 */}
+                <tr>
+                  <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground">卖家好评率</td>
+                  {items.map((item) => (
+                    <td key={item.商品信息.商品ID} className="px-3 py-2 text-xs">
+                      {item.卖家信息['作为卖家的好评率'] || '—'}
+                    </td>
+                  ))}
+                </tr>
+                {/* 发布时间 */}
+                <tr>
+                  <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground">发布时间</td>
+                  {items.map((item) => (
+                    <td key={item.商品信息.商品ID} className="px-3 py-2 text-xs text-muted-foreground">
+                      {item.商品信息.发布时间 || '未知'}
+                    </td>
+                  ))}
+                </tr>
+                {/* 链接 */}
+                <tr>
+                  <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground">操作</td>
+                  {items.map((item) => (
+                    <td key={item.商品信息.商品ID} className="px-3 py-2">
+                      <a
+                        href={item.商品信息.商品链接}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        查看详情 →
+                      </a>
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
-      </CardFooter>
-    </Card>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -375,6 +634,36 @@ export default function ResultsPage() {
   const [setPriceItem, setSetPriceItem] = useState<ResultItem | null>(null)
   const [isSetPriceOpen, setIsSetPriceOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+
+  // 多选对比
+  const [compareIds, setCompareIds] = useState<Set<string>>(new Set())
+  const [showCompare, setShowCompare] = useState(false)
+
+  const compareItems = useMemo(
+    () => results.filter((item) => compareIds.has(item.商品信息.商品ID)),
+    [results, compareIds],
+  )
+
+  const toggleCompareItem = useCallback((item: ResultItem) => {
+    setCompareIds((prev) => {
+      const next = new Set(prev)
+      const id = item.商品信息.商品ID
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        if (next.size >= 6) {
+          return prev // 最多对比6个
+        }
+        next.add(id)
+      }
+      return next
+    })
+  }, [])
+
+  const clearCompare = useCallback(() => {
+    setCompareIds(new Set())
+    setShowCompare(false)
+  }, [])
 
   // Platform filtering
   const allPlatforms = useMemo(() => getAllPlatforms(), [])
@@ -578,6 +867,38 @@ export default function ResultsPage() {
         </Button>
       </div>
 
+      {/* Compare Action Bar */}
+      {compareIds.size > 0 && (
+        <div className="mb-4 flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+          <GitCompareArrows className="h-4 w-4 text-blue-600 shrink-0" />
+          <span className="text-sm font-medium text-blue-800">
+            已选择 {compareIds.size} 件商品
+          </span>
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            {compareItems.slice(0, 4).map((item) => (
+              <Badge key={item.商品信息.商品ID} variant="secondary" className="shrink-0 gap-1 pr-1">
+                <span className="max-w-[80px] truncate text-[10px]">{item.商品信息.商品标题}</span>
+                <button onClick={() => toggleCompareItem(item)} className="hover:text-destructive">
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            {compareIds.size > 4 && (
+              <span className="text-xs text-blue-600">+{compareIds.size - 4}</span>
+            )}
+          </div>
+          <div className="ml-auto flex items-center gap-2 shrink-0">
+            <Button size="sm" variant="outline" onClick={clearCompare}>
+              清空
+            </Button>
+            <Button size="sm" onClick={() => setShowCompare(true)} disabled={compareIds.size < 2}>
+              <GitCompareArrows className="mr-1.5 h-3.5 w-3.5" />
+              开始对比
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Results Grid / Table */}
       {isLoading ? (
         <div className="py-12 text-center text-muted-foreground">正在加载结果...</div>
@@ -590,7 +911,14 @@ export default function ResultsPage() {
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredResults.map((item) => (
-            <ResultCard key={item.商品信息.商品ID} item={item} onSetPrice={handleSetPrice} onAddToPurchase={handleAddToPurchase} />
+            <ResultCard
+              key={item.商品信息.商品ID}
+              item={item}
+              onSetPrice={handleSetPrice}
+              onAddToPurchase={handleAddToPurchase}
+              selected={compareIds.has(item.商品信息.商品ID)}
+              onToggleSelect={toggleCompareItem}
+            />
           ))}
         </div>
       ) : (
@@ -598,8 +926,10 @@ export default function ResultsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[300px]">商品标题</TableHead>
+                <TableHead className="w-10">对比</TableHead>
+                <TableHead className="w-[280px]">商品标题</TableHead>
                 <TableHead>售价</TableHead>
+                <TableHead>利润</TableHead>
                 <TableHead>平台</TableHead>
                 <TableHead>AI建议</TableHead>
                 <TableHead>发布时间</TableHead>
@@ -611,14 +941,30 @@ export default function ResultsPage() {
                 const info = item.商品信息
                 const ai = item.ai_analysis
                 const isRec = ai?.is_recommended === true
+                const isSelected = compareIds.has(info.商品ID)
                 return (
-                  <TableRow key={info.商品ID}>
+                  <TableRow key={info.商品ID} className={cn(isSelected && 'bg-blue-50')}>
+                    <TableCell>
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleCompareItem(item)}
+                      />
+                    </TableCell>
                     <TableCell>
                       <a href={info.商品链接} target="_blank" rel="noopener noreferrer" className="line-clamp-2 text-sm hover:text-blue-600">
                         {info.商品标题}
                       </a>
                     </TableCell>
                     <TableCell className="font-semibold text-red-600">{info.当前售价}</TableCell>
+                    <TableCell>
+                      {item.estimated_profit != null ? (
+                        <span className={cn('text-xs font-semibold', item.estimated_profit > 0 ? 'text-emerald-600' : 'text-red-500')}>
+                          {item.estimated_profit > 0 ? '+' : ''}¥{item.estimated_profit.toFixed(0)}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell><PlatformBadge platformId={item.platform || 'xianyu'} size="sm" /></TableCell>
                     <TableCell>
                       <span className={cn('text-xs font-medium', isRec ? 'text-green-600' : 'text-red-600')}>
@@ -628,9 +974,9 @@ export default function ResultsPage() {
                     <TableCell className="text-xs text-muted-foreground">{info.发布时间 || '未知'}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => handleAddToPurchase(item)} className="text-xs text-blue-600 hover:underline">加入采购</button>
-                        <button onClick={() => handleSetPrice(item)} className="text-xs text-orange-600 hover:underline">设基准价</button>
-                        <a href={info.商品链接} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">详情</a>
+                        <button onClick={() => handleAddToPurchase(item)} className="text-xs text-blue-600 hover:underline whitespace-nowrap">采购</button>
+                        <button onClick={() => handleSetPrice(item)} className="text-xs text-orange-600 hover:underline whitespace-nowrap">基准价</button>
+                        <a href={info.商品链接} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline whitespace-nowrap">详情</a>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -664,6 +1010,22 @@ export default function ResultsPage() {
         item={setPriceItem}
         onSuccess={() => toast({ title: '基准价已设置，刷新结果可查看溢价分析' })}
       />
+
+      {/* Compare Panel */}
+      {showCompare && (
+        <ComparePanel
+          items={compareItems}
+          onClose={() => setShowCompare(false)}
+          onRemove={(id) => {
+            setCompareIds((prev) => {
+              const next = new Set(prev)
+              next.delete(id)
+              if (next.size < 2) setShowCompare(false)
+              return next
+            })
+          }}
+        />
+      )}
     </div>
   )
 }

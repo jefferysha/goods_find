@@ -1,5 +1,5 @@
 /** 平台 ID 枚举 */
-export type PlatformId = 'xianyu' | 'zhuanzhuan' | 'jd_used' | 'pdd_used' | 'taobao_used'
+export type PlatformId = 'xianyu' | 'zhuanzhuan' | 'jd_used' | 'pdd_used' | 'taobao_used' | 'mercari'
 
 /** 平台信息 */
 export interface PlatformInfo {

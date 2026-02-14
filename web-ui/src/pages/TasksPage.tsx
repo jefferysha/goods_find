@@ -63,6 +63,9 @@ function TaskForm({ mode, initialData, accountOptions, defaultAccount, onSubmit 
   const [newPublishOption, setNewPublishOption] = useState('__none__')
   const [region, setRegion] = useState('')
   const [platform, setPlatform] = useState('xianyu')
+  const [monitorMode, setMonitorMode] = useState<'cron' | 'high_frequency'>('cron')
+  const [monitorInterval, setMonitorInterval] = useState(60)
+  const [instantNotify, setInstantNotify] = useState(false)
 
   const platforms = getAllPlatforms()
 
@@ -81,6 +84,9 @@ function TaskForm({ mode, initialData, accountOptions, defaultAccount, onSubmit 
       setNewPublishOption(initialData.new_publish_option || '__none__')
       setRegion(initialData.region || '')
       setPlatform(initialData.platform || 'xianyu')
+      setMonitorMode(initialData.monitor_mode || 'cron')
+      setMonitorInterval(initialData.monitor_interval || 60)
+      setInstantNotify(initialData.instant_notify ?? false)
     } else {
       setTaskName('')
       setKeyword('')
@@ -95,6 +101,9 @@ function TaskForm({ mode, initialData, accountOptions, defaultAccount, onSubmit 
       setNewPublishOption('__none__')
       setRegion('')
       setPlatform('xianyu')
+      setMonitorMode('cron')
+      setMonitorInterval(60)
+      setInstantNotify(false)
     }
   }, [mode, initialData, defaultAccount])
 
@@ -114,13 +123,16 @@ function TaskForm({ mode, initialData, accountOptions, defaultAccount, onSubmit 
       min_price: minPrice || undefined,
       max_price: maxPrice || undefined,
       max_pages: maxPages,
-      cron: cron || undefined,
+      cron: monitorMode === 'cron' ? (cron || undefined) : undefined,
       account_state_file: accountStateFile || null,
       personal_only: personalOnly,
       free_shipping: freeShipping,
       new_publish_option: newPublishOption === '__none__' ? '' : newPublishOption,
       region: normalizedRegion,
       platform,
+      monitor_mode: monitorMode,
+      monitor_interval: monitorMode === 'high_frequency' ? Math.max(30, monitorInterval) : 60,
+      instant_notify: instantNotify,
     }
     onSubmit(data as unknown as TaskGenerateRequest)
   }
@@ -185,8 +197,47 @@ function TaskForm({ mode, initialData, accountOptions, defaultAccount, onSubmit 
           <Input type="number" value={maxPages} onChange={(e) => setMaxPages(Number(e.target.value))} className="sm:col-span-3" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
-          <Label className="sm:text-right">定时规则</Label>
-          <Input value={cron} onChange={(e) => setCron(e.target.value)} className="sm:col-span-3" placeholder="分 时 日 月 周 (例如: 0 8 * * *)" />
+          <Label className="sm:text-right">监控模式</Label>
+          <div className="sm:col-span-3">
+            <Select value={monitorMode} onValueChange={(v) => setMonitorMode(v as 'cron' | 'high_frequency')}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cron">定时模式（Cron）</SelectItem>
+                <SelectItem value="high_frequency">高频监控（秒级轮询）</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {monitorMode === 'cron' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+            <Label className="sm:text-right">定时规则</Label>
+            <Input value={cron} onChange={(e) => setCron(e.target.value)} className="sm:col-span-3" placeholder="分 时 日 月 周 (例如: 0 8 * * *)" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+            <Label className="sm:text-right">轮询间隔</Label>
+            <div className="sm:col-span-3 flex items-center gap-2">
+              <Input
+                type="number"
+                min={30}
+                value={monitorInterval}
+                onChange={(e) => setMonitorInterval(Math.max(30, parseInt(e.target.value) || 60))}
+                className="w-24"
+              />
+              <span className="text-sm text-muted-foreground">秒（最低 30 秒）</span>
+            </div>
+          </div>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+          <Label className="sm:text-right">新品秒推</Label>
+          <div className="sm:col-span-3 flex items-center gap-3">
+            <Switch checked={instantNotify} onCheckedChange={setInstantNotify} />
+            <span className="text-sm text-muted-foreground">
+              {instantNotify ? '已开启：发现新商品立即推送通知，AI分析结果稍后补充' : '已关闭：等AI分析完再推送'}
+            </span>
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
           <Label className="sm:text-right">绑定账号</Label>
@@ -456,7 +507,7 @@ export default function TasksPage() {
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span>价格: <strong className="text-foreground">{task.min_price || '不限'} - {task.max_price || '不限'}</strong></span>
                 <span>页数: <strong className="text-foreground">{task.max_pages || 3}</strong></span>
-                <span>定时: <strong className="text-foreground">{task.cron || '手动'}</strong></span>
+                <span>调度: <strong className="text-foreground">{task.monitor_mode === 'high_frequency' ? `高频 ${task.monitor_interval || 60}s` : (task.cron || '手动')}</strong>{task.instant_notify ? ' ⚡秒推' : ''}</span>
               </div>
 
               {/* 卡片操作区 */}
@@ -513,7 +564,7 @@ export default function TasksPage() {
               <TableHead className="text-center">价格范围</TableHead>
               <TableHead className="text-center">最大页数</TableHead>
               <TableHead className="text-center">AI 标准</TableHead>
-              <TableHead className="text-center">定时规则</TableHead>
+              <TableHead className="text-center">调度模式</TableHead>
               <TableHead className="text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
@@ -594,7 +645,12 @@ export default function TasksPage() {
                   </TableCell>
 
                   <TableCell className="text-center">
-                    <span className="text-sm font-medium">{task.cron || '手动触发'}</span>
+                    <span className="text-sm font-medium">
+                      {task.monitor_mode === 'high_frequency'
+                        ? `⚡ 高频 ${task.monitor_interval || 60}s`
+                        : (task.cron || '手动触发')}
+                    </span>
+                    {task.instant_notify && <span className="ml-1 text-xs text-amber-500">秒推</span>}
                   </TableCell>
 
                   <TableCell className="text-right">

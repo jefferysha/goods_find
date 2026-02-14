@@ -19,6 +19,10 @@ export interface Task {
   region?: string | null;
   platform: string;
   is_running: boolean;
+  // 高频监控相关
+  monitor_mode?: 'cron' | 'high_frequency';
+  monitor_interval?: number;  // 高频模式轮询间隔（秒）
+  instant_notify?: boolean;   // 新品秒推
 }
 
 // For PATCH requests, all fields are optional
@@ -39,4 +43,7 @@ export interface TaskGenerateRequest {
   new_publish_option?: string | null;
   region?: string | null;
   platform?: string;
+  monitor_mode?: 'cron' | 'high_frequency';
+  monitor_interval?: number;
+  instant_notify?: boolean;
 }

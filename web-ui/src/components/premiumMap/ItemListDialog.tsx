@@ -45,6 +45,7 @@ export function ItemListDialog({ open, onOpenChange, category }: ItemListDialogP
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState('good_deal')
   const [sortBy, setSortBy] = useState('profit_rate')
+  const [platformFilter, setPlatformFilter] = useState('all')
   const [isLoading, setIsLoading] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
   const { toast } = useToast()
@@ -56,7 +57,7 @@ export function ItemListDialog({ open, onOpenChange, category }: ItemListDialogP
       setItems([])
       setSelectedIds(new Set())
     }
-  }, [open, category, statusFilter, sortBy])
+  }, [open, category, statusFilter, sortBy, platformFilter])
   
   const loadItems = async () => {
     if (!category) return
@@ -65,9 +66,10 @@ export function ItemListDialog({ open, onOpenChange, category }: ItemListDialogP
       const params = new URLSearchParams()
       if (statusFilter) params.set('status', statusFilter)
       params.set('sort_by', sortBy)
+      if (platformFilter && platformFilter !== 'all') params.set('platform', platformFilter)
       
       const res = await fetch(
-        `/api/premium-map/categories/${category.category_id}/items?${params}`
+        `/api/premium-map/categories/${category.id}/items?${params}`
       )
       const data = await res.json()
       setItems(data.items || [])
@@ -106,7 +108,7 @@ export function ItemListDialog({ open, onOpenChange, category }: ItemListDialogP
     setIsAdding(true)
     try {
       const res = await fetch(
-        `/api/premium-map/categories/${category.category_id}/items/batch-purchase`,
+        `/api/premium-map/categories/${category.id}/items/batch-purchase`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -149,9 +151,9 @@ export function ItemListDialog({ open, onOpenChange, category }: ItemListDialogP
         </DialogHeader>
         
         {/* 筛选工具栏 */}
-        <div className="flex items-center gap-3 border-b pb-3">
+        <div className="flex items-center gap-3 border-b pb-3 flex-wrap">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-[120px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -162,7 +164,7 @@ export function ItemListDialog({ open, onOpenChange, category }: ItemListDialogP
           </Select>
           
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-[120px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -170,6 +172,17 @@ export function ItemListDialog({ open, onOpenChange, category }: ItemListDialogP
               <SelectItem value="profit">按利润金额</SelectItem>
               <SelectItem value="price">按价格</SelectItem>
               <SelectItem value="crawl_time">按爬取时间</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={platformFilter} onValueChange={setPlatformFilter}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部平台</SelectItem>
+              <SelectItem value="xianyu">闲鱼</SelectItem>
+              <SelectItem value="mercari">Mercari</SelectItem>
             </SelectContent>
           </Select>
           

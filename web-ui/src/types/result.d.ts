@@ -51,4 +51,13 @@ export interface ResultItem {
   "卖家信息": SellerInfo;
   ai_analysis: AiAnalysis;
   platform?: string;
+  // 价格本评估字段
+  category_id?: string;
+  category_name?: string;
+  evaluation_status?: 'great_deal' | 'good_deal' | 'overpriced' | 'no_config';
+  purchase_range_low?: number;
+  purchase_range_high?: number;
+  estimated_profit?: number;
+  estimated_profit_rate?: number;
+  premium_rate?: number;
 }

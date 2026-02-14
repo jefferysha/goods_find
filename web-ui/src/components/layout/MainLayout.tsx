@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar/Sidebar'
 import Header from './Header/Header'
 import { Toaster } from '@/components/ui/toaster'
+import LiveItemToast from '@/components/realtime/LiveItemToast'
 
 export default function MainLayout() {
   return (
@@ -14,6 +15,7 @@ export default function MainLayout() {
         </main>
       </div>
       <Toaster />
+      <LiveItemToast />
     </div>
   )
 }

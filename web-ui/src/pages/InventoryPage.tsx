@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useInventory } from '@/hooks/inventory/useInventory'
 import type { InventoryItem, InventoryStatus } from '@/types/inventory'
+import { getPricingSuggestion, type PricingSuggestion } from '@/api/inventory'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -66,6 +67,25 @@ export default function InventoryPage() {
   const [soldDialog, setSoldDialog] = useState<{ open: boolean; item?: InventoryItem }>({ open: false })
   const [soldPrice, setSoldPrice] = useState('')
   const [soldChannel, setSoldChannel] = useState('')
+
+  // Pricing Suggestion Dialog
+  const [pricingDialog, setPricingDialog] = useState<{ open: boolean; item?: InventoryItem }>({ open: false })
+  const [pricingSuggestion, setPricingSuggestion] = useState<PricingSuggestion | null>(null)
+  const [pricingCondition, setPricingCondition] = useState('good')
+  const [pricingLoading, setPricingLoading] = useState(false)
+
+  const fetchPricing = useCallback(async (itemId: string, condition: string) => {
+    setPricingLoading(true)
+    try {
+      const data = await getPricingSuggestion(itemId, condition)
+      setPricingSuggestion(data)
+    } catch (e) {
+      console.error('获取定价建议失败:', e)
+      setPricingSuggestion(null)
+    } finally {
+      setPricingLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     refresh()
@@ -259,18 +279,33 @@ export default function InventoryPage() {
                   <TableCell>
                     <div className="flex items-center gap-1">
                       {item.status !== 'sold' && item.status !== 'returned' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 text-xs"
-                          onClick={() => {
-                            setSoldDialog({ open: true, item })
-                            setSoldPrice(item.listing_price ? String(item.listing_price) : '')
-                            setSoldChannel('')
-                          }}
-                        >
-                          售出
-                        </Button>
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => {
+                              setPricingDialog({ open: true, item })
+                              setPricingCondition('good')
+                              setPricingSuggestion(null)
+                              fetchPricing(String(item.id), 'good')
+                            }}
+                          >
+                            定价
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => {
+                              setSoldDialog({ open: true, item })
+                              setSoldPrice(item.listing_price ? String(item.listing_price) : '')
+                              setSoldChannel('')
+                            }}
+                          >
+                            售出
+                          </Button>
+                        </>
                       )}
                       <Button
                         variant="ghost"
@@ -332,6 +367,109 @@ export default function InventoryPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setSoldDialog({ open: false })}>取消</Button>
             <Button onClick={handleMarkSold} disabled={!soldPrice || !soldChannel.trim()}>确认售出</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Pricing Suggestion Dialog */}
+      <Dialog open={pricingDialog.open} onOpenChange={(open) => { if (!open) setPricingDialog({ open: false }) }}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle>智能定价建议</DialogTitle>
+            <DialogDescription>
+              {pricingDialog.item?.title}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {/* 成色选择 */}
+            <div className="space-y-2">
+              <Label>商品成色</Label>
+              <Select
+                value={pricingCondition}
+                onValueChange={(v) => {
+                  setPricingCondition(v)
+                  if (pricingDialog.item) fetchPricing(String(pricingDialog.item.id), v)
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="excellent">95新及以上</SelectItem>
+                  <SelectItem value="good">9成新</SelectItem>
+                  <SelectItem value="fair">7-8成新</SelectItem>
+                  <SelectItem value="poor">6成新及以下</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {pricingLoading ? (
+              <div className="text-center py-8 text-muted-foreground">正在分析市场行情...</div>
+            ) : pricingSuggestion ? (
+              <>
+                {/* 建议价格 */}
+                <div className="grid grid-cols-2 gap-3">
+                  <Card className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
+                    <CardContent className="pt-4 pb-3 px-4">
+                      <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-1">快速出手价</p>
+                      <p className="text-xl font-bold text-green-700 dark:text-green-300">
+                        {pricingSuggestion.quick_sell_price != null ? `¥${pricingSuggestion.quick_sell_price}` : '-'}
+                      </p>
+                      {pricingSuggestion.estimated_profit_quick != null && (
+                        <p className={`text-xs mt-1 ${pricingSuggestion.estimated_profit_quick >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                          预估利润 ¥{pricingSuggestion.estimated_profit_quick}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+                    <CardContent className="pt-4 pb-3 px-4">
+                      <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">利润最大化价</p>
+                      <p className="text-xl font-bold text-blue-700 dark:text-blue-300">
+                        {pricingSuggestion.max_profit_price != null ? `¥${pricingSuggestion.max_profit_price}` : '-'}
+                      </p>
+                      {pricingSuggestion.estimated_profit_max != null && (
+                        <p className={`text-xs mt-1 ${pricingSuggestion.estimated_profit_max >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                          预估利润 ¥{pricingSuggestion.estimated_profit_max}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* 市场行情 */}
+                <div className="border rounded-lg p-3 space-y-2">
+                  <p className="text-sm font-medium">市场行情参考</p>
+                  <div className="grid grid-cols-4 gap-2 text-center text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs">样本数</p>
+                      <p className="font-medium">{pricingSuggestion.sample_count}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">中位价</p>
+                      <p className="font-medium">{pricingSuggestion.median_price != null ? `¥${pricingSuggestion.median_price}` : '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">最低价</p>
+                      <p className="font-medium">{pricingSuggestion.min_price != null ? `¥${pricingSuggestion.min_price}` : '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">最高价</p>
+                      <p className="font-medium">{pricingSuggestion.max_price != null ? `¥${pricingSuggestion.max_price}` : '-'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {pricingSuggestion.sample_count === 0 && (
+                  <p className="text-sm text-amber-600 text-center">暂无同类商品数据，建议先运行对应关键词的监控任务</p>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">暂无定价数据</div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPricingDialog({ open: false })}>关闭</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

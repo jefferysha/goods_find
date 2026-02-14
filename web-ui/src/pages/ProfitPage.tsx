@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useProfit } from '@/hooks/profit/useProfit'
+import { getROIOverview, type ROIOverview } from '@/api/profit'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,9 +39,22 @@ export default function ProfitPage() {
     refresh,
   } = useProfit()
 
+  // ROI Overview
+  const [roiOverview, setRoiOverview] = useState<ROIOverview | null>(null)
+
+  const fetchROI = useCallback(async (filters?: Record<string, any>) => {
+    try {
+      const data = await getROIOverview(filters)
+      setRoiOverview(data)
+    } catch (e) {
+      console.error('获取ROI概览失败:', e)
+    }
+  }, [])
+
   useEffect(() => {
     refresh()
-  }, [refresh])
+    fetchROI()
+  }, [refresh, fetchROI])
 
   const handleDateChange = (field: 'start_date' | 'end_date', value: string) => {
     const newRange = { ...dateRange, [field]: value || undefined }
@@ -150,6 +164,58 @@ export default function ProfitPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* ROI Overview */}
+      {roiOverview && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">ROI 投入产出分析</h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Card className="bg-indigo-50 dark:bg-indigo-950 border-indigo-200 dark:border-indigo-800">
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">总体 ROI</p>
+                <p className={`text-2xl font-bold ${roiOverview.overall_roi >= 0 ? 'text-indigo-700 dark:text-indigo-300' : 'text-red-500'}`}>
+                  {roiOverview.overall_roi.toFixed(1)}%
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-muted-foreground font-medium">平均库龄</p>
+                <p className="text-2xl font-bold">{roiOverview.avg_holding_days.toFixed(1)}天</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-muted-foreground font-medium">已出件数</p>
+                <p className="text-2xl font-bold">{roiOverview.count}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Keyword ROI Ranking */}
+          {roiOverview.keyword_ranking.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">品类 ROI 排名</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {roiOverview.keyword_ranking.slice(0, 8).map((kw, idx) => (
+                    <div key={kw.keyword} className="flex items-center gap-3">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${idx < 3 ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300' : 'bg-muted text-muted-foreground'}`}>
+                        {idx + 1}
+                      </span>
+                      <span className="text-sm font-medium flex-1 truncate">{kw.keyword}</span>
+                      <span className={`text-sm font-bold ${kw.roi >= 0 ? 'text-green-600' : 'text-red-500'}`}>{kw.roi.toFixed(1)}%</span>
+                      <span className="text-xs text-muted-foreground">利润 ¥{kw.total_profit.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
