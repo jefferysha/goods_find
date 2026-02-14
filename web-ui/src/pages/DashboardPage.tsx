@@ -34,7 +34,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">经营驾驶舱</h1>
+      <h1 className="text-xl md:text-2xl font-bold text-foreground">经营驾驶舱</h1>
 
       {/* Row 1: KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

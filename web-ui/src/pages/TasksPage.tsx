@@ -127,10 +127,10 @@ function TaskForm({ mode, initialData, accountOptions, defaultAccount, onSubmit 
 
   return (
     <form id="task-form" onSubmit={handleSubmit}>
-      <div className="grid gap-6 py-4">
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">目标平台</Label>
-          <div className="col-span-3">
+      <div className="grid gap-4 py-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+          <Label className="sm:text-right">目标平台</Label>
+          <div className="sm:col-span-3">
             <Select value={platform} onValueChange={setPlatform}>
               <SelectTrigger>
                 <SelectValue placeholder="选择平台" />
@@ -154,43 +154,43 @@ function TaskForm({ mode, initialData, accountOptions, defaultAccount, onSubmit 
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">任务名称</Label>
-          <Input value={taskName} onChange={(e) => setTaskName(e.target.value)} className="col-span-3" placeholder="例如：索尼 A7M4 相机" required />
+        <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+          <Label className="sm:text-right">任务名称</Label>
+          <Input value={taskName} onChange={(e) => setTaskName(e.target.value)} className="sm:col-span-3" placeholder="例如：索尼 A7M4 相机" required />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">搜索关键词</Label>
-          <Input value={keyword} onChange={(e) => setKeyword(e.target.value)} className="col-span-3" placeholder="例如：a7m4" required />
+        <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+          <Label className="sm:text-right">搜索关键词</Label>
+          <Input value={keyword} onChange={(e) => setKeyword(e.target.value)} className="sm:col-span-3" placeholder="例如：a7m4" required />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">详细需求</Label>
+        <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+          <Label className="sm:text-right">详细需求</Label>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="col-span-3"
+            className="sm:col-span-3"
             placeholder="请用自然语言详细描述你的购买需求，AI将根据此描述生成分析标准..."
             required
           />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">价格范围</Label>
-          <div className="col-span-3 flex items-center gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+          <Label className="sm:text-right">价格范围</Label>
+          <div className="sm:col-span-3 flex items-center gap-2">
             <Input type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="最低价" />
             <span>-</span>
             <Input type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="最高价" />
           </div>
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">搜索页数</Label>
-          <Input type="number" value={maxPages} onChange={(e) => setMaxPages(Number(e.target.value))} className="col-span-3" />
+        <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+          <Label className="sm:text-right">搜索页数</Label>
+          <Input type="number" value={maxPages} onChange={(e) => setMaxPages(Number(e.target.value))} className="sm:col-span-3" />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">定时规则</Label>
-          <Input value={cron} onChange={(e) => setCron(e.target.value)} className="col-span-3" placeholder="分 时 日 月 周 (例如: 0 8 * * *)" />
+        <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+          <Label className="sm:text-right">定时规则</Label>
+          <Input value={cron} onChange={(e) => setCron(e.target.value)} className="sm:col-span-3" placeholder="分 时 日 月 周 (例如: 0 8 * * *)" />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">绑定账号</Label>
-          <div className="col-span-3">
+        <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+          <Label className="sm:text-right">绑定账号</Label>
+          <div className="sm:col-span-3">
             <Select value={accountStateFile || '__none__'} onValueChange={(v) => setAccountStateFile(v === '__none__' ? '' : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="未绑定（自动选择）" />
@@ -206,17 +206,17 @@ function TaskForm({ mode, initialData, accountOptions, defaultAccount, onSubmit 
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">仅个人卖家</Label>
+        <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+          <Label className="sm:text-right">仅个人卖家</Label>
           <Switch checked={personalOnly} onCheckedChange={setPersonalOnly} />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">是否包邮</Label>
+        <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+          <Label className="sm:text-right">是否包邮</Label>
           <Switch checked={freeShipping} onCheckedChange={setFreeShipping} />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">新发布范围</Label>
-          <div className="col-span-3">
+        <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+          <Label className="sm:text-right">新发布范围</Label>
+          <div className="sm:col-span-3">
             <Select value={newPublishOption} onValueChange={setNewPublishOption}>
               <SelectTrigger>
                 <SelectValue placeholder="不筛选（默认）" />
@@ -232,9 +232,9 @@ function TaskForm({ mode, initialData, accountOptions, defaultAccount, onSubmit 
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">区域筛选</Label>
-          <div className="col-span-3 space-y-1">
+        <div className="grid grid-cols-1 sm:grid-cols-4 items-start sm:items-center gap-2 sm:gap-4">
+          <Label className="sm:text-right">区域筛选</Label>
+          <div className="sm:col-span-3 space-y-1">
             <Input value={region} onChange={(e) => setRegion(e.target.value)} placeholder="例如：浙江/杭州/滨江区 或 上海/徐汇区" />
             <p className="text-xs text-muted-foreground">区域筛选会导致满足条件的商品数量很少</p>
           </div>
@@ -403,9 +403,9 @@ export default function TasksPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">任务管理</h1>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>+ 创建新任务</Button>
+      <div className="mb-4 md:mb-6 flex items-center justify-between">
+        <h1 className="text-xl md:text-2xl font-bold text-foreground">任务管理</h1>
+        <Button size="sm" className="md:size-default" onClick={() => setIsCreateDialogOpen(true)}>+ 创建新任务</Button>
       </div>
 
       {error && (
@@ -415,8 +415,94 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* Tasks Table */}
-      <div className="rounded-xl border bg-card shadow-sm overflow-x-auto">
+      {/* 移动端：卡片列表 */}
+      <div className="space-y-3 md:hidden">
+        {isLoading && tasks.length === 0 ? (
+          <div className="py-12 text-center text-muted-foreground">正在加载中...</div>
+        ) : tasks.length === 0 ? (
+          <div className="py-12 text-center text-muted-foreground">没有找到任何任务。</div>
+        ) : (
+          tasks.map((task) => (
+            <div key={task.id} className="rounded-xl border bg-card p-4 shadow-sm space-y-3">
+              {/* 卡片头部：名称 + 状态 */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-semibold truncate">{task.task_name}</span>
+                    <PlatformBadge platformId={task.platform || 'xianyu'} size="sm" />
+                    <Badge
+                      variant={task.is_running ? 'default' : 'secondary'}
+                      className={cn(
+                        'text-[10px] px-1.5 py-0',
+                        task.is_running
+                          ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0'
+                          : 'bg-amber-100 text-amber-700 border-0',
+                      )}
+                    >
+                      {task.is_running ? '运行中' : '已停止'}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    关键词: <span className="font-mono">{task.keyword}</span>
+                  </p>
+                </div>
+                <Switch
+                  checked={task.enabled}
+                  onCheckedChange={(val) => handleToggleEnabled(task, val)}
+                />
+              </div>
+
+              {/* 卡片信息行 */}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span>价格: <strong className="text-foreground">{task.min_price || '不限'} - {task.max_price || '不限'}</strong></span>
+                <span>页数: <strong className="text-foreground">{task.max_pages || 3}</strong></span>
+                <span>定时: <strong className="text-foreground">{task.cron || '手动'}</strong></span>
+              </div>
+
+              {/* 卡片操作区 */}
+              <div className="flex items-center gap-2 pt-1 border-t border-border/40">
+                {!task.is_running ? (
+                  <Button
+                    size="sm"
+                    className={cn(
+                      'h-8 flex-1',
+                      task.enabled
+                        ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                        : 'bg-muted text-muted-foreground hover:bg-muted',
+                    )}
+                    disabled={!task.enabled}
+                    onClick={() => handleStartTask(task.id)}
+                  >
+                    <Play className="mr-1 h-3 w-3 fill-current" /> 运行
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="h-8 flex-1"
+                    disabled={stoppingTaskIds.has(task.id)}
+                    onClick={() => handleStopTask(task.id)}
+                  >
+                    {stoppingTaskIds.has(task.id) ? '停止中...' : <><Square className="mr-1 h-3 w-3 fill-current" /> 停止</>}
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" className="h-8" onClick={() => handleOpenCriteriaDialog(task)}>
+                  AI标准
+                </Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" title="编辑" onClick={() => handleEditTask(task)}>
+                  <Pencil className="h-3.5 w-3.5 text-blue-600" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" title="删除" onClick={() => handleDeleteTask(task.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* 桌面端：表格 */}
+      <div className="hidden md:block rounded-xl border bg-card shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

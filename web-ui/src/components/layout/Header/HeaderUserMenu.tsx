@@ -21,9 +21,9 @@ export default function HeaderUserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="gap-2">
+        <Button variant="ghost" className="gap-2 px-2 md:px-3">
           <User className="h-4 w-4" />
-          <span className="text-sm">{displayName}</span>
+          <span className="hidden sm:inline text-sm">{displayName}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

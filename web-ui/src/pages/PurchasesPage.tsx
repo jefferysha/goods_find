@@ -150,7 +150,7 @@ export default function PurchasesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">采购清单</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-foreground">采购清单</h1>
         <div className="flex items-center gap-2">
           {selectedIds.size > 0 && (
             <Button variant="outline" onClick={() => setAssignDialog(true)}>

@@ -551,7 +551,7 @@ export default function PriceBookPage() {
             <BookOpen className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">价格本</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">价格本</h1>
             <p className="text-sm text-muted-foreground">
               管理品类定价模板，自动计算收购区间与利润
             </p>

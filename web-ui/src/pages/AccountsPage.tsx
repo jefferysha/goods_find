@@ -460,7 +460,7 @@ export default function AccountsPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">账号管理</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">账号管理</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             管理各平台的登录状态，账号可绑定到监控任务。
           </p>

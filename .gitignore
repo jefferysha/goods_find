@@ -1,12 +1,70 @@
-# Python
+# ============================================================
+# .gitignore — 项目统一版
+# 适用于后端 (Python/uv) + 前端 (web-ui/pnpm) 全栈项目
+# ============================================================
+
+# ── Python ──────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.egg-info/
+*.egg
 .Python
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── 虚拟环境 ────────────────────────────────────────────────
+.venv/
+venv/
+ENV/
+env/
+
+# ── Node / 前端 ─────────────────────────────────────────────
+node_modules/
+web-ui/node_modules/
+dist/
+web-ui/dist/
+
+# ── 环境变量（真实密钥，不提交） ────────────────────────────
+.env
+.env.local
+
+# ── 运行时数据（部署后动态生成） ─────────────────────────────
+data/
+images/
+logs/
+jsonl/
+state/
+user_data/
+.cache/
+
+# ── 数据库 ──────────────────────────────────────────────────
+*.db
+*.sqlite
+
+# ── 日志 ────────────────────────────────────────────────────
+*.log
+
+# ── IDE / 编辑器 ────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ── 系统文件 ────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Python 构建产物 ─────────────────────────────────────────
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -16,39 +74,4 @@ parts/
 sdist/
 var/
 wheels/
-*.egg-info/
 .installed.cfg
-*.egg
-
-# Virtual Environment
-.venv/
-venv/
-ENV/
-env/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Environment variables
-.env
-.env.local
-
-# Database
-*.db
-*.sqlite
-
-# Logs
-*.log
-logs/
-
-# User data and cache
-user_data/
-.cache/
-
-# OS
-.DS_Store
-Thumbs.db

@@ -232,7 +232,7 @@ export default function PremiumMapPage() {
             <MapPin className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">溢价地图</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">溢价地图</h1>
             <p className="text-sm text-muted-foreground">
               按品类查看溢价概览与价格分布
             </p>

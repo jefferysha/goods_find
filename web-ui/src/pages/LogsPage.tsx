@@ -122,7 +122,7 @@ export default function LogsPage() {
     <div className="flex h-[calc(100vh-10rem)] flex-col">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-foreground">运行日志</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">运行日志</h1>
           <div className="flex items-center gap-2">
             <Label className="text-sm text-muted-foreground">任务</Label>
             <Select value={selectedTaskId} onValueChange={setSelectedTaskId}>

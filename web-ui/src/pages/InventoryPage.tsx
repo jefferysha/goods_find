@@ -95,7 +95,7 @@ export default function InventoryPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">库存台账</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-foreground">库存台账</h1>
         <Button variant="outline" onClick={() => refresh()}>
           刷新
         </Button>

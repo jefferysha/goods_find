@@ -470,7 +470,7 @@ export default function ResultsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-foreground">结果查看</h1>
+      <h1 className="mb-6 text-xl md:text-2xl font-bold text-foreground">结果查看</h1>
 
       {error && (
         <div className="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">

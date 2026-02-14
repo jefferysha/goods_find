@@ -7,6 +7,9 @@ RUN pnpm install --frozen-lockfile
 COPY web-ui/ .
 RUN pnpm run build
 
+# 验证构建产物是否存在
+RUN ls -la /dist && echo "✅ 前端构建成功" || echo "❌ 前端构建失败"
+
 # Stage 3: Create the final, lean image
 FROM python:3.11-slim-bookworm
 
@@ -54,6 +57,9 @@ RUN apt-get update \
 
 # 复制前端构建产物到 /app/dist
 COPY --from=frontend-builder /dist /app/dist
+
+# 验证前端产物是否正确复制
+RUN ls -la /app/dist && ls -la /app/dist/assets && echo "✅ 前端产物复制成功" || echo "❌ 前端产物复制失败"
 
 # 复制应用代码
 # .dockerignore 文件会处理排除项

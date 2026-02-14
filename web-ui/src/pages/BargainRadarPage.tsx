@@ -255,7 +255,7 @@ export default function BargainRadarPage() {
       {/* 页面标题 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">捡漏雷达</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">捡漏雷达</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             自动扫描全部监控商品，智能评估利润空间
           </p>

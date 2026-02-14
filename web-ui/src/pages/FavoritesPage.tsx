@@ -44,7 +44,7 @@ export default function FavoritesPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-foreground">收藏对比</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-foreground">收藏对比</h1>
         <div className="flex h-60 items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
@@ -54,7 +54,7 @@ export default function FavoritesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">收藏对比</h1>
+      <h1 className="text-xl md:text-2xl font-bold text-foreground">收藏对比</h1>
 
       {favorites.length === 0 ? (
         <Card>

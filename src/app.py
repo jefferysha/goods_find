@@ -99,7 +99,7 @@ app.include_router(bargain_radar.router)
 # 旧的静态文件目录（用于截图等）
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# 挂载 Vue 3 前端构建产物
+# 挂载 React 前端构建产物
 # 注意：需要在所有 API 路由之后挂载，以避免覆盖 API 路由
 import os
 if os.path.exists("dist"):

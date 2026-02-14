@@ -42,7 +42,7 @@ export default function AlertsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">智能提醒</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-foreground">智能提醒</h1>
         <Button onClick={handleCreate}>
           <Plus className="mr-1 h-4 w-4" />
           创建规则

@@ -32,7 +32,7 @@ export default function CompetitorPage() {
   if (keywords.length === 0 && !isLoading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold tracking-tight">竞品观察</h1>
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight">竞品观察</h1>
         <div className="flex items-center justify-center rounded-lg border border-dashed p-12">
           <p className="text-muted-foreground">暂无数据，请先运行爬虫任务</p>
         </div>
@@ -44,7 +44,7 @@ export default function CompetitorPage() {
     <div className="space-y-6">
       {/* 标题 */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">竞品观察</h1>
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight">竞品观察</h1>
         <Button variant="outline" size="sm" onClick={refresh} disabled={isLoading}>
           <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
           刷新

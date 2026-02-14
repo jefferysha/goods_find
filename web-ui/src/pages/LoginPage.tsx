@@ -122,21 +122,21 @@ export default function LoginPage() {
       {/* Login card overlay */}
       <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
         <div
-          className="w-full max-w-md rounded-2xl border border-white/60 bg-white/70 p-8 shadow-xl backdrop-blur-xl"
+          className="w-full max-w-md rounded-2xl border border-white/60 bg-white/70 p-6 sm:p-8 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-6 duration-700"
           style={{
             boxShadow:
-              '0 8px 60px rgba(255,107,74,0.08), 0 2px 20px rgba(74,159,255,0.06)',
+              '0 8px 60px rgba(255,107,74,0.12), 0 2px 24px rgba(74,159,255,0.08)',
           }}
         >
           {/* Logo area */}
-          <div className="mb-6 flex justify-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF6B4A] to-[#FF8F6B] text-xl font-bold text-white shadow-lg shadow-orange-200/50">
-              鱼
+          <div className="mb-5 flex justify-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF6B4A] to-[#FF8F6B] text-xl font-bold text-white shadow-lg shadow-orange-200/50 animate-in zoom-in-75 duration-500 delay-300">
+              淘
             </div>
           </div>
 
           {/* Title with typewriter effect */}
-          <h1 className="mb-1 bg-gradient-to-r from-[#FF6B4A] via-[#e0784a] to-[#4A9FFF] bg-clip-text text-center text-2xl font-bold text-transparent">
+          <h1 className="mb-1 bg-gradient-to-r from-[#FF6B4A] via-[#e0784a] to-[#4A9FFF] bg-clip-text text-center text-xl sm:text-2xl font-bold text-transparent">
             {titleText}
             <span
               className={`ml-0.5 inline-block text-[#FF6B4A] transition-opacity ${
