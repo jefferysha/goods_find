@@ -1,9 +1,10 @@
 """
 WebSocket 路由
-提供实时通信功能
+提供实时通信功能，支持新商品发现事件的实时推送
 """
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import Set
+from pydantic import BaseModel
+from typing import Set, Optional, Dict, Any
 
 
 router = APIRouter()
@@ -55,3 +56,32 @@ async def broadcast_message(message_type: str, data: dict):
     # 清理断开的连接
     for connection in disconnected:
         active_connections.discard(connection)
+
+
+# --- 内部 API：爬虫子进程通过 HTTP 回调推送新商品事件 ---
+
+class NewItemEvent(BaseModel):
+    """爬虫发现新商品时的事件"""
+    task_name: str
+    keyword: str
+    item_id: str
+    title: str
+    price: Optional[float] = None
+    image_url: Optional[str] = None
+    item_link: Optional[str] = None
+    seller_name: Optional[str] = None
+    is_recommended: Optional[bool] = None
+    ai_reason: Optional[str] = None
+    evaluation_status: Optional[str] = None
+    estimated_profit: Optional[float] = None
+    instant_notify: bool = False  # 是否为秒推模式下的速报
+
+
+@router.post("/api/internal/new-item-event")
+async def receive_new_item_event(event: NewItemEvent):
+    """
+    接收爬虫子进程推送的新商品事件，并通过 WebSocket 广播到前端。
+    这个端点供爬虫进程内部调用，不需要用户认证。
+    """
+    await broadcast_message("new_item_discovered", event.dict())
+    return {"status": "ok"}

@@ -12,7 +12,7 @@ class PriceMatchingService:
         from src.services.price_book_service import PriceBookService
         self.price_book_service = PriceBookService()
     
-    def match_and_evaluate(self, item_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def match_and_evaluate(self, item_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         商品自动匹配价格本并计算评估信息
         
@@ -23,7 +23,7 @@ class PriceMatchingService:
             评估结果字典，包含品类ID、评估状态、收购区间、预估利润等
         """
         # 1. 通过关键词匹配价格本品类
-        price_book_entry = self._find_matching_category(
+        price_book_entry = await self._find_matching_category(
             item_data.get('搜索关键字', ''),
             item_data.get('商品信息', {}).get('商品标题', '')
         )
@@ -57,7 +57,7 @@ class PriceMatchingService:
         
         return evaluation
     
-    def _find_matching_category(self, task_keyword: str, title: str) -> Optional[Dict[str, Any]]:
+    async def _find_matching_category(self, task_keyword: str, title: str) -> Optional[Dict[str, Any]]:
         """
         通过关键词匹配价格本品类
         
@@ -68,20 +68,7 @@ class PriceMatchingService:
         Returns:
             匹配的价格本条目，如果没有匹配则返回 None
         """
-        # 获取所有价格本条目（同步方法）
-        import asyncio
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # 如果已有运行的事件循环，创建新任务
-                future = asyncio.ensure_future(self.price_book_service.get_all())
-                entries = asyncio.get_event_loop().run_until_complete(future)
-            else:
-                # 否则直接运行
-                entries = loop.run_until_complete(self.price_book_service.get_all())
-        except:
-            # 如果没有事件循环，创建一个
-            entries = asyncio.run(self.price_book_service.get_all())
+        entries = await self.price_book_service.get_all()
         
         title_lower = title.lower()
         task_keyword_lower = task_keyword.lower()

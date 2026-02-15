@@ -16,6 +16,31 @@
     "new_publish_option": null,
     "region": null,
     "platform": "xianyu",
-    "is_running": false
+    "is_running": false,
+    "monitor_mode": "cron",
+    "monitor_interval": 60,
+    "instant_notify": false
+  },
+  {
+    "task_name": "龙珠手办-Mercari",
+    "enabled": true,
+    "keyword": "ドラゴンボール フィギュア",
+    "description": "测试Mercari龙珠手办搜索",
+    "max_pages": 1,
+    "personal_only": true,
+    "min_price": "1000",
+    "max_price": "5000",
+    "cron": "0 */6 * * *",
+    "ai_prompt_base_file": "prompts/base_prompt.txt",
+    "ai_prompt_criteria_file": "prompts/default_criteria.txt",
+    "account_state_file": null,
+    "free_shipping": true,
+    "new_publish_option": null,
+    "region": null,
+    "platform": "mercari",
+    "is_running": false,
+    "monitor_mode": "cron",
+    "monitor_interval": 60,
+    "instant_notify": false
   }
 ]

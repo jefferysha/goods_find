@@ -229,6 +229,94 @@ async def init_db():
                 updated_at TEXT DEFAULT (datetime('now')),
                 FOREIGN KEY (user_id) REFERENCES users(id)
             );
+
+            -- ==========================================
+            -- seller_lists: 卖家黑白名单
+            -- ==========================================
+            CREATE TABLE IF NOT EXISTS seller_lists (
+                seller_id TEXT PRIMARY KEY,
+                seller_name TEXT NOT NULL DEFAULT '',
+                list_type TEXT NOT NULL DEFAULT 'blacklist',  -- blacklist / whitelist
+                reason TEXT DEFAULT '',
+                created_at TEXT DEFAULT (datetime('now'))
+            );
+
+            -- ==========================================
+            -- seller_profiles: 卖家信用档案（缓存）
+            -- ==========================================
+            CREATE TABLE IF NOT EXISTS seller_profiles (
+                seller_id TEXT PRIMARY KEY,
+                seller_name TEXT DEFAULT '',
+                credit_score REAL DEFAULT 0,
+                credit_level TEXT DEFAULT 'normal',     -- reliable / normal / risky
+                total_sold INTEGER DEFAULT 0,
+                positive_rate REAL DEFAULT 0,
+                account_age_days INTEGER DEFAULT 0,
+                last_updated TEXT DEFAULT (datetime('now'))
+            );
+
+            -- ==========================================
+            -- market_prices: 市场基准价（替代 market_prices.json）
+            -- ==========================================
+            CREATE TABLE IF NOT EXISTS market_prices (
+                id TEXT PRIMARY KEY,
+                task_id INTEGER NOT NULL,
+                keyword TEXT NOT NULL,
+                reference_price REAL NOT NULL,
+                fair_used_price REAL,
+                condition TEXT DEFAULT 'good',
+                category TEXT DEFAULT '',
+                platform TEXT DEFAULT 'xianyu',
+                source TEXT DEFAULT '',
+                note TEXT DEFAULT '',
+                created_at TEXT DEFAULT (datetime('now')),
+                updated_at TEXT DEFAULT (datetime('now'))
+            );
+            CREATE INDEX IF NOT EXISTS idx_market_prices_task_id ON market_prices(task_id);
+            CREATE INDEX IF NOT EXISTS idx_market_prices_keyword ON market_prices(keyword);
+
+            -- ==========================================
+            -- pricing_thresholds: 溢价阈值（替代 pricing_thresholds.json）
+            -- ==========================================
+            CREATE TABLE IF NOT EXISTS pricing_thresholds (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_id INTEGER,
+                low_price_max REAL NOT NULL DEFAULT -15.0,
+                fair_max REAL NOT NULL DEFAULT 5.0,
+                slight_premium_max REAL NOT NULL DEFAULT 20.0,
+                UNIQUE(task_id)
+            );
+
+            -- ==========================================
+            -- login_states: 登录/账号状态（替代 state/*.json + xianyu_state.json）
+            -- ==========================================
+            CREATE TABLE IF NOT EXISTS login_states (
+                name TEXT PRIMARY KEY,
+                content TEXT NOT NULL,
+                updated_at TEXT DEFAULT (datetime('now'))
+            );
+
+            -- ==========================================
+            -- cross_platform_config: 跨平台比价配置（汇率等）
+            -- ==========================================
+            CREATE TABLE IF NOT EXISTS cross_platform_config (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                key TEXT UNIQUE NOT NULL,
+                value TEXT NOT NULL,
+                updated_at TEXT DEFAULT (datetime('now'))
+            );
+
+            -- ==========================================
+            -- keyword_category_map: 关键词→品类手动映射
+            -- ==========================================
+            CREATE TABLE IF NOT EXISTS keyword_category_map (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                keyword TEXT NOT NULL,
+                platform TEXT NOT NULL,
+                category_id TEXT NOT NULL,
+                created_at TEXT DEFAULT (datetime('now')),
+                UNIQUE(keyword, platform)
+            );
         """)
         await db.commit()
     finally:

@@ -79,12 +79,12 @@ class DashboardService:
         捡漏排行榜：按溢价率从低到高排列 Top N 商品。
         数据源：SQLite items 表 + 基准价。
         """
-        from src.infrastructure.persistence.json_market_price_repository import JsonMarketPriceRepository
+        from src.infrastructure.persistence.sqlite_market_price_repository import SqliteMarketPriceRepository
         from src.infrastructure.persistence.sqlite_manager import get_db
         from src.services.pricing_service import PricingService
 
         pricing_service = PricingService()
-        market_repo = JsonMarketPriceRepository()
+        market_repo = SqliteMarketPriceRepository()
         all_market_prices = await market_repo.get_all()
 
         if not all_market_prices:

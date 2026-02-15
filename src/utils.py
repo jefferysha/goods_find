@@ -126,7 +126,7 @@ async def save_to_jsonl(data_record: dict, keyword: str):
         # 1. 调用价格匹配服务进行评估
         from src.services.price_matching_service import PriceMatchingService
         matching_service = PriceMatchingService()
-        evaluation = matching_service.match_and_evaluate(data_record)
+        evaluation = await matching_service.match_and_evaluate(data_record)
         
         # 2. 合并评估数据到商品记录
         data_record.update(evaluation)

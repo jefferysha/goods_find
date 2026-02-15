@@ -10,6 +10,7 @@ from fastapi.templating import Jinja2Templates
 from src.api.routes import tasks, logs, settings, prompts, results, login_state, websocket, accounts, pricing
 from src.api.routes import history, alerts, dashboard, favorites, platforms, auth
 from src.api.routes import price_book, purchases, inventory, profit, team, premium_map, bargain_radar
+from src.api.routes import bargain, seller_credit, cross_platform
 from src.api.dependencies import set_process_service, set_scheduler_service
 from src.infrastructure.persistence.sqlite_manager import init_db
 from src.services.task_service import TaskService
@@ -35,6 +36,19 @@ async def lifespan(app: FastAPI):
 
     # 初始化 SQLite 数据库
     await init_db()
+
+    # 从数据库同步登录状态到文件系统（Playwright 爬虫需要文件路径）
+    try:
+        from src.infrastructure.persistence.sqlite_login_state_repository import SqliteLoginStateRepository
+        state_repo = SqliteLoginStateRepository()
+        # 导出默认登录状态到 xianyu_state.json
+        await state_repo.export_to_file("xianyu_default", "xianyu_state.json")
+        # 导出所有账号状态到 state/ 目录
+        synced = await state_repo.sync_all_to_dir("state")
+        if synced > 0:
+            print(f"已同步 {synced} 个登录状态到文件系统")
+    except Exception as e:
+        print(f"同步登录状态到文件时出错（不影响启动）: {e}")
 
     # 重置所有任务状态为停止
     task_repo = JsonTaskRepository()
@@ -94,6 +108,9 @@ app.include_router(profit.router)
 app.include_router(team.router)
 app.include_router(premium_map.router)
 app.include_router(bargain_radar.router)
+app.include_router(bargain.router)
+app.include_router(seller_credit.router)
+app.include_router(cross_platform.router)
 
 # 挂载静态文件
 # 旧的静态文件目录（用于截图等）

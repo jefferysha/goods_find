@@ -243,23 +243,29 @@ async def test_ai_settings(
         from openai import OpenAI
         import httpx
 
+        # 合并前端提交值和已存储的环境变量值，前端值优先
         stored_api_key = env_manager.get_value("OPENAI_API_KEY", "")
-        submitted_api_key = settings.get("OPENAI_API_KEY", "")
-        api_key = submitted_api_key or stored_api_key
+        stored_base_url = env_manager.get_value("OPENAI_BASE_URL", "")
+        stored_model = env_manager.get_value("OPENAI_MODEL_NAME", "")
+
+        api_key = settings.get("OPENAI_API_KEY", "") or stored_api_key
+        base_url = settings.get("OPENAI_BASE_URL", "") or stored_base_url
+        model_name = settings.get("OPENAI_MODEL_NAME", "") or stored_model
 
         # 创建OpenAI客户端
         client_params = {
             "api_key": api_key,
-            "base_url": settings.get("OPENAI_BASE_URL", ""),
+            "base_url": base_url,
             "timeout": httpx.Timeout(30.0),
         }
 
-        # 如果有代理设置
+        # 代理设置：有代理则使用代理，无代理则显式绕过系统代理环境变量
         proxy_url = settings.get("PROXY_URL", "")
         if proxy_url:
             client_params["http_client"] = httpx.Client(proxy=proxy_url)
-
-        model_name = settings.get("OPENAI_MODEL_NAME", "")
+        else:
+            # 显式设置 proxy=None 以绕过系统级 HTTPS_PROXY 等环境变量
+            client_params["http_client"] = httpx.Client(proxy=None)
         print(f"AI测试 - BASE_URL: {client_params['base_url']}, MODEL: {model_name}")
 
         client = OpenAI(**client_params)

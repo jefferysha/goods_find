@@ -8,6 +8,7 @@ import contextlib
 
 from src.config import STATE_FILE
 from src.scraper import scrape_xianyu
+from src.scraper_mercari import scrape_mercari
 
 
 async def main():
@@ -55,10 +56,22 @@ async def main():
                     return True
         return False
 
-    if not os.path.exists(STATE_FILE) and not has_bound_account(tasks_config) and not has_any_state_file():
-        sys.exit(
-            f"错误: 未找到登录状态文件。请在 state/ 中添加账号或配置 account_state_file。"
-        )
+    # 不需要登录态的平台
+    NO_LOGIN_PLATFORMS = {"mercari"}
+
+    def needs_login_state(tasks: list) -> bool:
+        """检查是否有任务需要登录态（如闲鱼）"""
+        for task in tasks:
+            platform = task.get("platform", "xianyu")
+            if platform not in NO_LOGIN_PLATFORMS and task.get("enabled", False):
+                return True
+        return False
+
+    if needs_login_state(tasks_config):
+        if not os.path.exists(STATE_FILE) and not has_bound_account(tasks_config) and not has_any_state_file():
+            sys.exit(
+                f"错误: 未找到登录状态文件。请在 state/ 中添加账号或配置 account_state_file。"
+            )
 
     # 读取所有prompt文件内容
     for task in tasks_config:
@@ -136,10 +149,21 @@ async def main():
         except NotImplementedError:
             pass
 
+    # 平台爬虫分发映射
+    PLATFORM_SCRAPERS = {
+        "xianyu": scrape_xianyu,
+        "mercari": scrape_mercari,
+    }
+
     tasks = []
     for task_conf in active_task_configs:
-        print(f"-> 任务 '{task_conf['task_name']}' 已加入执行队列。")
-        tasks.append(asyncio.create_task(scrape_xianyu(task_config=task_conf, debug_limit=args.debug_limit)))
+        platform = task_conf.get("platform", "xianyu")
+        scraper_fn = PLATFORM_SCRAPERS.get(platform)
+        if not scraper_fn:
+            print(f"-> 任务 '{task_conf['task_name']}' 平台 '{platform}' 暂不支持，跳过。")
+            continue
+        print(f"-> 任务 '{task_conf['task_name']}' [{platform}] 已加入执行队列。")
+        tasks.append(asyncio.create_task(scraper_fn(task_config=task_conf, debug_limit=args.debug_limit)))
 
     async def _shutdown_watcher():
         await stop_event.wait()

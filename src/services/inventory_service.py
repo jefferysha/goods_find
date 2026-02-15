@@ -194,6 +194,9 @@ class InventoryService:
             await db.close()
 
     async def get_summary(self, assignee: Optional[str] = None) -> dict:
+        """返回格式匹配前端 InventorySummary 类型：
+        {total_count, total_cost, estimated_value, by_status, by_assignee}
+        """
         db = await get_db()
         try:
             condition = "WHERE assignee = ?" if assignee else ""
@@ -202,18 +205,48 @@ class InventoryService:
             cursor = await db.execute(
                 f"""SELECT
                     COUNT(*) as total_count,
-                    SUM(CASE WHEN status IN ('in_stock','refurbishing','listed') THEN 1 ELSE 0 END) as active_count,
-                    SUM(CASE WHEN status IN ('in_stock','refurbishing','listed') THEN total_cost ELSE 0 END) as total_inventory_cost,
-                    SUM(CASE WHEN status IN ('in_stock','refurbishing','listed') THEN COALESCE(listing_price, total_cost) ELSE 0 END) as total_inventory_value,
+                    COALESCE(SUM(CASE WHEN status IN ('in_stock','refurbishing','listed') THEN total_cost ELSE 0 END), 0) as total_cost,
+                    COALESCE(SUM(CASE WHEN status IN ('in_stock','refurbishing','listed') THEN COALESCE(listing_price, total_cost) ELSE 0 END), 0) as estimated_value,
                     SUM(CASE WHEN status = 'in_stock' THEN 1 ELSE 0 END) as in_stock_count,
                     SUM(CASE WHEN status = 'refurbishing' THEN 1 ELSE 0 END) as refurbishing_count,
                     SUM(CASE WHEN status = 'listed' THEN 1 ELSE 0 END) as listed_count,
-                    SUM(CASE WHEN status = 'sold' THEN 1 ELSE 0 END) as sold_count
+                    SUM(CASE WHEN status = 'sold' THEN 1 ELSE 0 END) as sold_count,
+                    SUM(CASE WHEN status = 'returned' THEN 1 ELSE 0 END) as returned_count
                 FROM inventory_items {condition}""",
                 params,
             )
             row = await cursor.fetchone()
-            return dict(row) if row else {}
+            d = dict(row) if row else {}
+
+            by_status = {
+                "in_stock": d.get("in_stock_count", 0),
+                "refurbishing": d.get("refurbishing_count", 0),
+                "listed": d.get("listed_count", 0),
+                "sold": d.get("sold_count", 0),
+                "returned": d.get("returned_count", 0),
+            }
+
+            # 按负责人统计
+            cursor = await db.execute(
+                f"""SELECT COALESCE(assignee, '未分配') as assignee,
+                    COUNT(*) as count,
+                    COALESCE(SUM(total_cost), 0) as cost
+                FROM inventory_items {condition} GROUP BY assignee""",
+                params,
+            )
+            rows = await cursor.fetchall()
+            by_assignee = {
+                dict(r)["assignee"]: {"count": dict(r)["count"], "cost": dict(r)["cost"]}
+                for r in rows
+            }
+
+            return {
+                "total_count": d.get("total_count", 0),
+                "total_cost": d.get("total_cost", 0),
+                "estimated_value": d.get("estimated_value", 0),
+                "by_status": by_status,
+                "by_assignee": by_assignee,
+            }
         finally:
             await db.close()
 

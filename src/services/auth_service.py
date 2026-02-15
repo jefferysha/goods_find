@@ -168,12 +168,24 @@ async def get_user_by_id(user_id: int) -> Optional[UserInfo]:
         row = await cursor.fetchone()
         if not row:
             return None
+
+        # 查询 team_members 表获取角色
+        role = "member"
+        role_cursor = await db.execute(
+            "SELECT role FROM team_members WHERE user_id = ?",
+            (user_id,),
+        )
+        role_row = await role_cursor.fetchone()
+        if role_row:
+            role = role_row["role"]
+
         return UserInfo(
             id=row["id"],
             username=row["username"],
             display_name=row["display_name"] or row["username"],
             is_active=bool(row["is_active"]),
             created_at=row["created_at"] or "",
+            role=role,
         )
     finally:
         await db.close()

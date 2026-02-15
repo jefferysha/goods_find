@@ -526,3 +526,35 @@ class ItemRepository:
             return [row_to_record(dict(r)) for r in rows]
         finally:
             await db.close()
+
+    async def get_similar_prices(
+        self, keyword: str, days: int = 30, limit: int = 100
+    ) -> List[float]:
+        """
+        获取同关键词商品的近期价格列表（用于智能定价建议）。
+
+        Args:
+            keyword: 关键词
+            days: 最近多少天的数据
+            limit: 最多返回多少条
+
+        Returns:
+            价格列表（浮点数）
+        """
+        db = await get_db()
+        try:
+            cursor = await db.execute(
+                """
+                SELECT price FROM items
+                WHERE keyword = ?
+                  AND price > 0
+                  AND crawl_time >= datetime('now', ?)
+                ORDER BY crawl_time DESC
+                LIMIT ?
+                """,
+                (keyword, f"-{days} days", limit),
+            )
+            rows = await cursor.fetchall()
+            return [float(r["price"]) for r in rows]
+        finally:
+            await db.close()

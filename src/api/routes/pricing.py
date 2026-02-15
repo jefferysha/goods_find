@@ -4,12 +4,14 @@ from typing import List, Optional
 from src.domain.models.market_price import MarketPrice, MarketPriceCreate, MarketPriceUpdate, PremiumThresholds
 from src.domain.models.price_analysis import PriceAnalysis, BatchStats
 from src.services.pricing_service import PricingService
-from src.infrastructure.persistence.json_market_price_repository import JsonMarketPriceRepository
+from src.infrastructure.persistence.sqlite_market_price_repository import SqliteMarketPriceRepository
+from src.infrastructure.persistence.sqlite_thresholds_repository import SqliteThresholdsRepository
 from datetime import datetime
 
 router = APIRouter(prefix="/api/pricing", tags=["pricing"])
 pricing_service = PricingService()
-market_price_repo = JsonMarketPriceRepository()
+market_price_repo = SqliteMarketPriceRepository()
+thresholds_repo = SqliteThresholdsRepository()
 
 # ===== 基准价 CRUD =====
 
@@ -105,45 +107,12 @@ async def get_batch_stats(
     return stats.dict()
 
 # ===== 阈值配置 =====
-# 存储在 pricing_thresholds.json 中
 
 @router.get("/thresholds")
 async def get_thresholds(task_id: Optional[int] = Query(None)):
-    import os, json
-    filepath = "pricing_thresholds.json"
-    if os.path.exists(filepath):
-        with open(filepath, 'r', encoding='utf-8') as f:
-            all_thresholds = json.load(f)
-        if task_id is not None:
-            for t in all_thresholds:
-                if t.get("task_id") == task_id:
-                    return t
-        # 返回全局默认
-        for t in all_thresholds:
-            if t.get("task_id") is None:
-                return t
-    return PremiumThresholds().dict()
+    return await thresholds_repo.get(task_id=task_id)
 
 @router.put("/thresholds")
 async def update_thresholds(data: PremiumThresholds):
-    import os, json
-    filepath = "pricing_thresholds.json"
-    all_thresholds = []
-    if os.path.exists(filepath):
-        with open(filepath, 'r', encoding='utf-8') as f:
-            all_thresholds = json.load(f)
-
-    # 更新或添加
-    found = False
-    for i, t in enumerate(all_thresholds):
-        if t.get("task_id") == data.task_id:
-            all_thresholds[i] = data.dict()
-            found = True
-            break
-    if not found:
-        all_thresholds.append(data.dict())
-
-    with open(filepath, 'w', encoding='utf-8') as f:
-        json.dump(all_thresholds, f, ensure_ascii=False, indent=2)
-
-    return {"message": "阈值更新成功", "data": data.dict()}
+    result = await thresholds_repo.upsert(data.dict())
+    return {"message": "阈值更新成功", "data": result}

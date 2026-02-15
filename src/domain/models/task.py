@@ -14,6 +14,12 @@ class TaskStatus(str, Enum):
     SCHEDULED = "scheduled"
 
 
+class MonitorMode(str, Enum):
+    """监控模式"""
+    CRON = "cron"                # 传统 Cron 定时模式
+    HIGH_FREQUENCY = "high_frequency"  # 高频轮询模式（秒级）
+
+
 class Task(BaseModel):
     """任务实体"""
     id: Optional[int] = None
@@ -26,14 +32,18 @@ class Task(BaseModel):
     min_price: Optional[str] = None
     max_price: Optional[str] = None
     cron: Optional[str] = None
-    ai_prompt_base_file: str
-    ai_prompt_criteria_file: str
+    ai_prompt_base_file: str = "prompts/base_prompt.txt"
+    ai_prompt_criteria_file: Optional[str] = None
     account_state_file: Optional[str] = None
     free_shipping: bool = True
     new_publish_option: Optional[str] = None
     region: Optional[str] = None
     platform: str = "xianyu"  # 目标平台
     is_running: bool = False
+    # 高频监控相关字段
+    monitor_mode: str = "cron"  # cron | high_frequency
+    monitor_interval: int = 60  # 高频模式下的轮询间隔（秒），最低30秒
+    instant_notify: bool = False  # 新品秒推：发现新商品先推通知，再补AI分析
 
     class Config:
         use_enum_values = True
@@ -64,12 +74,15 @@ class TaskCreate(BaseModel):
     max_price: Optional[str] = None
     cron: Optional[str] = None
     ai_prompt_base_file: str = "prompts/base_prompt.txt"
-    ai_prompt_criteria_file: str
+    ai_prompt_criteria_file: Optional[str] = None
     account_state_file: Optional[str] = None
     free_shipping: bool = True
     new_publish_option: Optional[str] = None
     region: Optional[str] = None
     platform: str = "xianyu"
+    monitor_mode: str = "cron"
+    monitor_interval: int = 60
+    instant_notify: bool = False
 
     @validator('min_price', 'max_price', pre=True)
     def convert_price_to_str(cls, v):
@@ -99,6 +112,9 @@ class TaskUpdate(BaseModel):
     region: Optional[str] = None
     platform: Optional[str] = None
     is_running: Optional[bool] = None
+    monitor_mode: Optional[str] = None
+    monitor_interval: Optional[int] = None
+    instant_notify: Optional[bool] = None
     
     @validator('min_price', 'max_price', pre=True)
     def convert_price_to_str(cls, v):
@@ -125,6 +141,9 @@ class TaskGenerateRequest(BaseModel):
     new_publish_option: Optional[str] = None
     region: Optional[str] = None
     platform: str = "xianyu"
+    monitor_mode: str = "cron"
+    monitor_interval: int = 60
+    instant_notify: bool = False
 
     @validator('min_price', 'max_price', pre=True)
     def convert_price_to_str(cls, v):

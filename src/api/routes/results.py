@@ -6,6 +6,7 @@ import io
 import statistics as _statistics
 from collections import defaultdict as _defaultdict
 from datetime import datetime as _datetime, timedelta as _timedelta
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
@@ -86,7 +87,7 @@ async def delete_result_data(keyword: str = Query(..., description="搜索关键
 
 @router.get("/items")
 async def get_results(
-    keyword: str = Query(..., description="搜索关键词"),
+    keyword: Optional[str] = Query(None, description="搜索关键词，不传则返回所有结果"),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
     recommended_only: bool = Query(False),
@@ -95,9 +96,11 @@ async def get_results(
 ):
     """
     查询指定关键词的商品数据，支持分页、筛选和排序。
-    数据源：SQLite items 表。
+    数据源：SQLite items 表。返回时动态评估价格本，确保始终使用最新配置。
     """
-    return await item_repo.query(
+    from src.services.price_book_service import PriceBookService
+
+    data = await item_repo.query(
         keyword=keyword,
         recommended_only=recommended_only,
         sort_by=sort_by,
@@ -105,6 +108,67 @@ async def get_results(
         page=page,
         limit=limit,
     )
+
+    # 动态评估价格本：用当前最新的价格本配置实时计算评估字段
+    items = data.get("items", [])
+    if items:
+        pb_service = PriceBookService()
+        all_entries = await pb_service.get_all()
+        # 构建 keyword -> entry 映射
+        keyword_map: dict = {}
+        for entry in all_entries:
+            for kw in entry.get("keywords", []):
+                keyword_map[kw] = entry
+
+        for item in items:
+            item_keyword = item.get("搜索关键字", "")
+            entry = keyword_map.get(item_keyword)
+            if not entry or not entry.get("target_sell_price"):
+                # 确实未配置，保持原样
+                continue
+
+            # 提取商品价格
+            price_str = item.get("商品信息", {}).get("当前售价", "")
+            try:
+                item_price = float(str(price_str).replace("¥", "").replace(",", "").strip() or "0")
+            except (ValueError, TypeError):
+                continue
+            if item_price <= 0:
+                continue
+
+            target = entry["target_sell_price"]
+            ideal = entry.get("purchase_ideal")
+            upper = entry.get("purchase_upper")
+            total_fees = entry.get("total_fees", 0)
+            total_cost = item_price + total_fees
+            profit = target - total_cost
+            profit_rate = round(profit / target, 4) if target > 0 else 0
+
+            if ideal is None or upper is None:
+                status = "no_config"
+            elif item_price <= ideal:
+                status = "great_deal"
+            elif item_price <= upper:
+                status = "good_deal"
+            else:
+                status = "overpriced"
+
+            premium_rate = None
+            market_price = entry.get("market_price")
+            if market_price and market_price > 0:
+                premium_rate = round((item_price - market_price) / market_price, 4)
+
+            # 注入评估字段（覆盖数据库中可能为空的旧值）
+            item["category_id"] = entry["id"]
+            item["category_name"] = entry.get("category_name", "")
+            item["evaluation_status"] = status
+            item["purchase_range_low"] = ideal
+            item["purchase_range_high"] = upper
+            item["estimated_profit"] = round(profit, 2)
+            item["estimated_profit_rate"] = profit_rate
+            item["premium_rate"] = premium_rate
+
+    return data
 
 
 @router.get("/premium-map/overview")
@@ -121,6 +185,7 @@ async def get_premium_map_overview():
             continue
         all_prices = []
         total_items = 0
+        platform_stats: dict = {}  # {platform: {count, prices}}
         for kw in keywords:
             data = await item_repo.query(keyword=kw, page=1, limit=10000)
             items = data.get("items", [])
@@ -130,6 +195,11 @@ async def get_premium_map_overview():
                 price = float(str(price_str).replace("¥", "").replace(",", "").strip() or "0")
                 if price > 0:
                     all_prices.append(price)
+                    plat = item.get("platform", "xianyu")
+                    if plat not in platform_stats:
+                        platform_stats[plat] = {"count": 0, "prices": []}
+                    platform_stats[plat]["count"] += 1
+                    platform_stats[plat]["prices"].append(price)
         if not all_prices:
             continue
         median_price = round(_statistics.median(all_prices), 2)
@@ -137,6 +207,18 @@ async def get_premium_map_overview():
         avg_premium = round((median_price - market_price) / market_price * 100, 2) if market_price > 0 else 0
         purchase_upper = entry.get("purchase_upper")
         good_deal_count = sum(1 for p in all_prices if purchase_upper and p <= purchase_upper)
+
+        # 计算每个平台的中位价
+        platform_summary = {}
+        for plat, stats in platform_stats.items():
+            plat_median = round(_statistics.median(stats["prices"]), 2) if stats["prices"] else 0
+            platform_summary[plat] = {
+                "count": stats["count"],
+                "median_price": plat_median,
+                "min_price": round(min(stats["prices"]), 2) if stats["prices"] else 0,
+                "max_price": round(max(stats["prices"]), 2) if stats["prices"] else 0,
+            }
+
         result.append({
             "id": entry["id"],
             "category_name": entry["category_name"],
@@ -148,6 +230,7 @@ async def get_premium_map_overview():
             "good_deal_count": good_deal_count,
             "purchase_range": entry.get("purchase_range", [None, None]),
             "new_price": entry.get("new_price"),
+            "platform_stats": platform_summary,
         })
     return result
 

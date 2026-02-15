@@ -3,12 +3,12 @@ import statistics
 from typing import List, Optional
 from src.domain.models.market_price import MarketPrice, PremiumThresholds
 from src.domain.models.price_analysis import PriceAnalysis, BatchStats
-from src.infrastructure.persistence.json_market_price_repository import JsonMarketPriceRepository
+from src.infrastructure.persistence.sqlite_market_price_repository import SqliteMarketPriceRepository
 
 
 class PricingService:
     def __init__(self):
-        self.repo = JsonMarketPriceRepository()
+        self.repo = SqliteMarketPriceRepository()
 
     def calculate_batch_stats(self, prices: List[float]) -> BatchStats:
         if not prices:

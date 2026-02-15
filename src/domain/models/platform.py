@@ -55,6 +55,14 @@ PLATFORMS: Dict[str, PlatformInfo] = {
         enabled=False,
         description="淘宝二手市场",
     ),
+    "mercari": PlatformInfo(
+        id="mercari",
+        name="Mercari(煤炉)",
+        icon="mercari",
+        color="#FF0211",
+        enabled=True,
+        description="日本最大的二手交易平台",
+    ),
 }
 
 

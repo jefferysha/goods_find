@@ -38,9 +38,18 @@ class ProfitService:
         try:
             cursor = await db.execute("SELECT * FROM sale_records WHERE id = ?", (record_id,))
             row = await cursor.fetchone()
-            return dict(row) if row else None
+            return self._normalize_record(dict(row)) if row else None
         finally:
             await db.close()
+
+    @staticmethod
+    def _normalize_record(r: dict) -> dict:
+        """将 DB 字段映射为前端 SaleRecord 期望的字段名"""
+        r["net_profit"] = r.pop("profit", 0)
+        # 确保费用明细字段存在
+        for field in ("shipping_fee", "refurbish_fee", "platform_fee", "other_fee"):
+            r.setdefault(field, 0)
+        return r
 
     async def get_sale_records(
         self,
@@ -70,7 +79,7 @@ class ProfitService:
                 f"SELECT * FROM sale_records {where} ORDER BY sold_at DESC", params
             )
             rows = await cursor.fetchall()
-            return [dict(r) for r in rows]
+            return [self._normalize_record(dict(r)) for r in rows]
         finally:
             await db.close()
 
@@ -98,18 +107,18 @@ class ProfitService:
 
             cursor = await db.execute(
                 f"""SELECT
-                    COUNT(*) as sold_count,
+                    COUNT(*) as total_sold,
                     COALESCE(SUM(sold_price), 0) as total_revenue,
                     COALESCE(SUM(total_cost), 0) as total_cost,
-                    COALESCE(SUM(profit), 0) as total_profit,
+                    COALESCE(SUM(profit), 0) as net_profit,
                     ROUND(COALESCE(AVG(profit_rate), 0), 2) as avg_profit_rate
                 FROM sale_records {where}""",
                 params,
             )
             row = await cursor.fetchone()
             return dict(row) if row else {
-                "sold_count": 0, "total_revenue": 0, "total_cost": 0,
-                "total_profit": 0, "avg_profit_rate": 0,
+                "total_sold": 0, "total_revenue": 0, "total_cost": 0,
+                "net_profit": 0, "avg_profit_rate": 0,
             }
         finally:
             await db.close()
@@ -136,13 +145,13 @@ class ProfitService:
                 f"""SELECT
                     keyword,
                     COUNT(*) as sold_count,
-                    COALESCE(SUM(sold_price), 0) as revenue,
-                    COALESCE(SUM(total_cost), 0) as cost,
-                    COALESCE(SUM(profit), 0) as profit,
+                    COALESCE(SUM(sold_price), 0) as total_revenue,
+                    COALESCE(SUM(total_cost), 0) as total_cost,
+                    COALESCE(SUM(profit), 0) as net_profit,
                     ROUND(COALESCE(AVG(profit_rate), 0), 2) as avg_profit_rate
                 FROM sale_records {where}
                 GROUP BY keyword
-                ORDER BY profit DESC""",
+                ORDER BY net_profit DESC""",
                 params,
             )
             rows = await cursor.fetchall()
@@ -172,13 +181,13 @@ class ProfitService:
                 f"""SELECT
                     COALESCE(assignee, '未分配') as assignee,
                     COUNT(*) as sold_count,
-                    COALESCE(SUM(sold_price), 0) as revenue,
-                    COALESCE(SUM(total_cost), 0) as cost,
-                    COALESCE(SUM(profit), 0) as profit,
+                    COALESCE(SUM(sold_price), 0) as total_revenue,
+                    COALESCE(SUM(total_cost), 0) as total_cost,
+                    COALESCE(SUM(profit), 0) as net_profit,
                     ROUND(COALESCE(AVG(profit_rate), 0), 2) as avg_profit_rate
                 FROM sale_records {where}
                 GROUP BY assignee
-                ORDER BY profit DESC""",
+                ORDER BY net_profit DESC""",
                 params,
             )
             rows = await cursor.fetchall()
@@ -197,8 +206,9 @@ class ProfitService:
             cursor = await db.execute(
                 f"""SELECT
                     DATE(sold_at) as date,
-                    COUNT(*) as count,
+                    COUNT(*) as sold_count,
                     COALESCE(SUM(sold_price), 0) as revenue,
+                    COALESCE(SUM(total_cost), 0) as cost,
                     COALESCE(SUM(profit), 0) as profit
                 FROM sale_records
                 WHERE sold_at >= ? {condition}

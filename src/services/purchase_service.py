@@ -169,16 +169,49 @@ class PurchaseService:
         return inv_item
 
     async def get_stats(self, assignee: Optional[str] = None) -> dict:
+        """返回格式匹配前端 PurchaseStats 类型：
+        {total, by_status, by_assignee, total_estimated_profit, total_actual_cost}
+        """
         db = await get_db()
         try:
             condition = "WHERE assignee = ?" if assignee else ""
             params = [assignee] if assignee else []
+
+            # 按状态统计
             cursor = await db.execute(
                 f"""SELECT status, COUNT(*) as count FROM purchase_items {condition} GROUP BY status""",
                 params,
             )
             rows = await cursor.fetchall()
-            stats = {dict(r)["status"]: dict(r)["count"] for r in rows}
-            return stats
+            by_status = {dict(r)["status"]: dict(r)["count"] for r in rows}
+
+            # 按负责人统计
+            cursor = await db.execute(
+                f"""SELECT COALESCE(assignee, '未分配') as assignee, COUNT(*) as count
+                    FROM purchase_items {condition} GROUP BY assignee""",
+                params,
+            )
+            rows = await cursor.fetchall()
+            by_assignee = {dict(r)["assignee"]: dict(r)["count"] for r in rows}
+
+            # 汇总数据
+            cursor = await db.execute(
+                f"""SELECT
+                    COUNT(*) as total,
+                    COALESCE(SUM(estimated_profit), 0) as total_estimated_profit,
+                    COALESCE(SUM(CASE WHEN status = 'purchased' THEN actual_price ELSE 0 END), 0) as total_actual_cost
+                FROM purchase_items {condition}""",
+                params,
+            )
+            row = await cursor.fetchone()
+            summary = dict(row) if row else {"total": 0, "total_estimated_profit": 0, "total_actual_cost": 0}
+
+            return {
+                "total": summary["total"],
+                "by_status": by_status,
+                "by_assignee": by_assignee,
+                "total_estimated_profit": summary["total_estimated_profit"],
+                "total_actual_cost": summary["total_actual_cost"],
+            }
         finally:
             await db.close()

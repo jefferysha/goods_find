@@ -6,6 +6,8 @@ from datetime import datetime
 from typing import Optional
 from urllib.parse import urlencode
 
+import requests
+
 from playwright.async_api import (
     Response,
     TimeoutError as PlaywrightTimeoutError,
@@ -297,6 +299,7 @@ async def scrape_xianyu(task_config: dict, debug_limit: int = 0):
     if new_publish_option == '__none__':
         new_publish_option = ''
     region_filter = (task_config.get('region') or '').strip()
+    instant_notify = task_config.get('instant_notify', False)
 
     processed_links = set()
     output_filename = os.path.join("jsonl", f"{keyword.replace(' ', '_')}_full_data.jsonl")
@@ -753,6 +756,11 @@ async def scrape_xianyu(task_config: dict, debug_limit: int = 0):
                                 # --- START: Real-time AI Analysis & Notification ---
                                 from src.config import SKIP_AI_ANALYSIS
 
+                                # 新品秒推：先发通知让用户抢先看到，再做AI分析
+                                if instant_notify:
+                                    log_time("[秒推模式] 发现新商品，立即推送通知...")
+                                    await send_ntfy_notification(item_data, "⚡ 新品速报（AI分析稍后补充）")
+
                                 # 检查是否跳过AI分析并直接发送通知
                                 if SKIP_AI_ANALYSIS:
                                     log_time("环境变量 SKIP_AI_ANALYSIS 已设置，跳过AI分析并直接发送通知...")
@@ -769,9 +777,10 @@ async def scrape_xianyu(task_config: dict, debug_limit: int = 0):
                                         except Exception as e:
                                             print(f"   [图片] 删除图片文件时出错: {e}")
 
-                                    # 直接发送通知，将所有商品标记为推荐
-                                    log_time("商品已跳过AI分析，准备发送通知...")
-                                    await send_ntfy_notification(item_data, "商品已跳过AI分析，直接通知")
+                                    # 如果未开启秒推，则在此发送通知
+                                    if not instant_notify:
+                                        log_time("商品已跳过AI分析，准备发送通知...")
+                                        await send_ntfy_notification(item_data, "商品已跳过AI分析，直接通知")
                                 else:
                                     log_time(f"开始对商品 #{item_data['商品ID']} 进行实时AI分析...")
                                     # 1. Download images
@@ -804,14 +813,50 @@ async def scrape_xianyu(task_config: dict, debug_limit: int = 0):
                                         except Exception as e:
                                             print(f"   [图片] 删除图片文件时出错: {e}")
 
-                                    # 3. Send notification if recommended
+                                    # 3. Send notification if recommended (如果秒推已发送则发送AI分析结果更新)
                                     if ai_analysis_result and ai_analysis_result.get('is_recommended'):
-                                        log_time("商品被AI推荐，准备发送通知...")
-                                        await send_ntfy_notification(item_data, ai_analysis_result.get("reason", "无"))
+                                        if instant_notify:
+                                            log_time("[秒推模式] AI分析完成，商品被推荐，发送AI分析结果补充通知...")
+                                            await send_ntfy_notification(item_data, f"✅ AI确认推荐: {ai_analysis_result.get('reason', '无')}")
+                                        else:
+                                            log_time("商品被AI推荐，准备发送通知...")
+                                            await send_ntfy_notification(item_data, ai_analysis_result.get("reason", "无"))
+                                    elif instant_notify and ai_analysis_result and not ai_analysis_result.get('is_recommended'):
+                                        log_time("[秒推模式] AI分析完成，商品不推荐，发送撤回通知...")
+                                        await send_ntfy_notification(item_data, f"❌ AI不推荐: {ai_analysis_result.get('reason', '无')}")
                                 # --- END: Real-time AI Analysis & Notification ---
 
                                 # 4. 保存包含AI结果的完整记录
                                 await save_to_jsonl(final_record, keyword)
+
+                                # 5. 通过 HTTP 回调推送新商品事件到 WebSocket（非阻塞）
+                                try:
+                                    ai_result = final_record.get('ai_analysis', {})
+                                    _ws_event = {
+                                        "task_name": task_config.get('task_name', ''),
+                                        "keyword": keyword,
+                                        "item_id": item_data.get('商品ID', ''),
+                                        "title": item_data.get('商品标题', ''),
+                                        "price": float(str(item_data.get('当前售价', '0')).replace('¥', '').replace(',', '').strip() or 0),
+                                        "image_url": item_data.get('商品主图链接', ''),
+                                        "item_link": item_data.get('商品链接', ''),
+                                        "seller_name": user_profile_data.get('卖家昵称', ''),
+                                        "is_recommended": ai_result.get('is_recommended') if isinstance(ai_result, dict) else None,
+                                        "ai_reason": ai_result.get('reason', '') if isinstance(ai_result, dict) else '',
+                                        "instant_notify": instant_notify,
+                                    }
+                                    _server_port = os.environ.get('SERVER_PORT', '8000')
+                                    loop = asyncio.get_running_loop()
+                                    await loop.run_in_executor(
+                                        None,
+                                        lambda: requests.post(
+                                            f"http://127.0.0.1:{_server_port}/api/internal/new-item-event",
+                                            json=_ws_event,
+                                            timeout=3
+                                        )
+                                    )
+                                except Exception as _ws_err:
+                                    print(f"   [WebSocket推送] 发送新商品事件失败（不影响主流程）: {_ws_err}")
 
                                 processed_links.add(unique_key)
                                 processed_item_count += 1

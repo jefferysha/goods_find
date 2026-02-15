@@ -3,6 +3,7 @@ import {
   Radar,
   Map,
   Search,
+  GitCompare,
   BookOpen,
   TrendingUp,
   Eye,
@@ -36,6 +37,7 @@ const navGroups: NavGroup[] = [
       { icon: Radar, label: '捡漏雷达', to: '/bargain-radar' },
       { icon: Map, label: '溢价地图', to: '/premium-map' },
       { icon: Search, label: '全部结果', to: '/results' },
+      { icon: GitCompare, label: '跨平台比价', to: '/cross-platform' },
     ],
   },
   {

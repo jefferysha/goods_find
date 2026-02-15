@@ -9,9 +9,17 @@ services:
     env_file:
       - .env
     volumes:
+      # 核心数据（必须持久化）—— SQLite 数据库包含所有业务数据
+      - app-data:/app/data
+      # 运行时数据
       - ./config.json:/app/config.json
       - ./prompts:/app/prompts
-      - ./jsonl:/app/jsonl
-      - ./logs:/app/logs
       - ./images:/app/images
+      # 可选（日志和历史 JSONL，丢失不影响业务）
+      - ./logs:/app/logs
+      - ./jsonl:/app/jsonl
     restart: unless-stopped
+
+volumes:
+  app-data:
+    driver: local

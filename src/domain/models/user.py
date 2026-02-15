@@ -31,6 +31,7 @@ class UserInfo(BaseModel):
     display_name: str
     is_active: bool
     created_at: str
+    role: str = "member"
 
 
 class TokenResponse(BaseModel):
