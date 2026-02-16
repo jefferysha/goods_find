@@ -26,6 +26,7 @@ async def init_db():
                 task_name TEXT NOT NULL,                -- 任务名称
                 keyword TEXT NOT NULL,                  -- 搜索关键词
                 platform TEXT DEFAULT 'xianyu',         -- 平台
+                currency TEXT DEFAULT 'CNY',            -- 货币代码 (CNY/JPY/USD)
 
                 -- 常查询字段（独立列 + 索引）
                 title TEXT,                             -- 商品标题
@@ -317,6 +318,57 @@ async def init_db():
                 created_at TEXT DEFAULT (datetime('now')),
                 UNIQUE(keyword, platform)
             );
+
+            -- ==========================================
+            -- category_tree: 品类层级树
+            -- ==========================================
+            CREATE TABLE IF NOT EXISTS category_tree (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                parent_id TEXT,
+                level INTEGER NOT NULL DEFAULT 1,
+                keywords TEXT DEFAULT '[]',
+                created_at TEXT DEFAULT (datetime('now')),
+                FOREIGN KEY (parent_id) REFERENCES category_tree(id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_category_tree_parent ON category_tree(parent_id);
+            CREATE INDEX IF NOT EXISTS idx_category_tree_level ON category_tree(level);
+
+            -- ==========================================
+            -- product_groups: 商品组（同商品跨平台聚合）
+            -- ==========================================
+            CREATE TABLE IF NOT EXISTS product_groups (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                normalized_name TEXT,
+                category_path TEXT,
+                brand TEXT,
+                model TEXT,
+                spec_summary TEXT,
+                created_at TEXT DEFAULT (datetime('now')),
+                updated_at TEXT DEFAULT (datetime('now'))
+            );
+            CREATE INDEX IF NOT EXISTS idx_product_groups_brand ON product_groups(brand);
+            CREATE INDEX IF NOT EXISTS idx_product_groups_model ON product_groups(model);
+            CREATE INDEX IF NOT EXISTS idx_product_groups_category ON product_groups(category_path);
+
+            -- ==========================================
+            -- item_product_match: 商品↔商品组映射
+            -- ==========================================
+            CREATE TABLE IF NOT EXISTS item_product_match (
+                id TEXT PRIMARY KEY,
+                item_id TEXT NOT NULL,
+                product_group_id TEXT NOT NULL,
+                condition_tier TEXT,
+                condition_detail TEXT,
+                confidence REAL DEFAULT 0.0,
+                matched_by TEXT DEFAULT 'ai',
+                created_at TEXT DEFAULT (datetime('now')),
+                FOREIGN KEY (product_group_id) REFERENCES product_groups(id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_item_match_item ON item_product_match(item_id);
+            CREATE INDEX IF NOT EXISTS idx_item_match_group ON item_product_match(product_group_id);
+            CREATE INDEX IF NOT EXISTS idx_item_match_condition ON item_product_match(condition_tier);
         """)
         await db.commit()
     finally:

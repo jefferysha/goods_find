@@ -9,4 +9,8 @@ export interface PlatformInfo {
   color: string
   enabled: boolean
   description: string
+  /** 平台默认货币代码, e.g. 'CNY', 'JPY' */
+  currency: string
+  /** 平台所在国家/地区代码, e.g. 'CN', 'JP' */
+  country: string
 }

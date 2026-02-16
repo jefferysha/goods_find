@@ -139,9 +139,9 @@ class TestExchangeRateManagement:
     @pytest.mark.asyncio
     async def test_platform_currency_mapping(self):
         """平台应正确映射到货币"""
-        from src.services.cross_platform_service import PLATFORM_CURRENCY
-        assert PLATFORM_CURRENCY["xianyu"] == "CNY"
-        assert PLATFORM_CURRENCY["mercari"] == "JPY"
+        from src.services.cross_platform_service import get_platform_currency
+        assert get_platform_currency("xianyu") == "CNY"
+        assert get_platform_currency("mercari") == "JPY"
 
 
 # ═══════════════════════════════════════════════════════════════

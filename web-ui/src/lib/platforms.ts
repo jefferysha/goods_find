@@ -12,6 +12,8 @@ export const PLATFORMS: Record<PlatformId, PlatformInfo> = {
     color: '#FF6600',
     enabled: true,
     description: '阿里巴巴旗下二手交易平台',
+    currency: 'CNY',
+    country: 'CN',
   },
   zhuanzhuan: {
     id: 'zhuanzhuan',
@@ -20,6 +22,8 @@ export const PLATFORMS: Record<PlatformId, PlatformInfo> = {
     color: '#5AC8FA',
     enabled: false,
     description: '58同城旗下二手交易平台',
+    currency: 'CNY',
+    country: 'CN',
   },
   jd_used: {
     id: 'jd_used',
@@ -28,6 +32,8 @@ export const PLATFORMS: Record<PlatformId, PlatformInfo> = {
     color: '#E4393C',
     enabled: false,
     description: '京东旗下二手优品',
+    currency: 'CNY',
+    country: 'CN',
   },
   pdd_used: {
     id: 'pdd_used',
@@ -36,6 +42,8 @@ export const PLATFORMS: Record<PlatformId, PlatformInfo> = {
     color: '#E02E24',
     enabled: false,
     description: '拼多多二手频道',
+    currency: 'CNY',
+    country: 'CN',
   },
   taobao_used: {
     id: 'taobao_used',
@@ -44,6 +52,8 @@ export const PLATFORMS: Record<PlatformId, PlatformInfo> = {
     color: '#FF5000',
     enabled: false,
     description: '淘宝二手市场',
+    currency: 'CNY',
+    country: 'CN',
   },
   mercari: {
     id: 'mercari',
@@ -52,6 +62,8 @@ export const PLATFORMS: Record<PlatformId, PlatformInfo> = {
     color: '#FF0211',
     enabled: true,
     description: '日本最大的二手交易平台',
+    currency: 'JPY',
+    country: 'JP',
   },
 }
 
@@ -78,6 +90,11 @@ export function getPlatformName(id: string): string {
 /** 获取平台主题色 */
 export function getPlatformColor(id: string): string {
   return PLATFORMS[id as PlatformId]?.color ?? '#888888'
+}
+
+/** 获取平台货币代码 */
+export function getPlatformCurrency(id: string): string {
+  return PLATFORMS[id as PlatformId]?.currency ?? 'CNY'
 }
 
 /** 平台是否已启用 */

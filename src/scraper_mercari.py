@@ -173,6 +173,7 @@ def _parse_mercari_item(raw_item: dict, keyword: str, task_name: str) -> Optiona
         "搜索关键字": keyword,
         "任务名称": task_name,
         "platform": "mercari",
+        "currency": "JPY",
         "_seller_id": str(seller_id),  # 内部字段，用于后续补充卖家信息
         "商品信息": {
             "商品ID": str(item_id),

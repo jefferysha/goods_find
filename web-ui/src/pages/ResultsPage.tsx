@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from 'react'
 import { useResults, type ResultFilters } from '@/hooks/results/useResults'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { getAllPlatforms } from '@/lib/platforms'
+import { getAllPlatforms, getPlatformCurrency } from '@/lib/platforms'
 import { parsePriceNumber } from '@/lib/pricing-utils'
 import type { ResultItem } from '@/types/result'
 
@@ -88,6 +88,30 @@ function PremiumRateBar({ rate, level }: { rate: number; level: string }) {
         <span>+50%</span>
       </div>
     </div>
+  )
+}
+
+// ─── Currency Display Helper ─────────────────────────────────
+/** 格式化价格显示，非 CNY 货币额外显示换算后的 CNY 近似值 */
+function formatPriceWithCurrency(priceStr: string, currency?: string): React.ReactNode {
+  if (!currency || currency === 'CNY') return priceStr
+  const numericPrice = parsePriceNumber(priceStr)
+  if (numericPrice <= 0) return priceStr
+  // 简单的 JPY → CNY 近似换算（默认汇率 0.048）
+  const JPY_TO_CNY = 0.048
+  if (currency === 'JPY') {
+    const cnyPrice = Math.round(numericPrice * JPY_TO_CNY)
+    return (
+      <>
+        {priceStr} <span className="text-[10px] font-normal text-muted-foreground">JPY</span>
+        <span className="ml-1 text-[10px] text-muted-foreground">(≈¥{cnyPrice.toLocaleString()} CNY)</span>
+      </>
+    )
+  }
+  return (
+    <>
+      {priceStr} <span className="text-[10px] font-normal text-muted-foreground">{currency}</span>
+    </>
   )
 }
 
@@ -235,6 +259,8 @@ function ResultCard({ item, onSetPrice, onAddToPurchase, selected, onToggleSelec
   const seller = item.卖家信息
   const ai = item.ai_analysis
   const platform = item.platform || 'xianyu'
+  const currency = item.currency || getPlatformCurrency(platform)
+  const crawlTime = item.爬取时间 || ''
 
   const isRecommended = ai?.is_recommended === true
   const imageUrl = info.商品图片列表?.[0] || info.商品主图链接 || ''
@@ -317,8 +343,10 @@ function ResultCard({ item, onSetPrice, onAddToPurchase, selected, onToggleSelec
         </a>
 
         <div className="flex items-end justify-between">
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-lg font-bold text-red-600">{info.当前售价}</span>
+          <div className="flex flex-wrap items-baseline gap-1.5">
+            <span className="text-lg font-bold text-red-600">
+              {formatPriceWithCurrency(info.当前售价, currency)}
+            </span>
             {info.商品原价 && info.商品原价 !== '暂无' && (
               <span className="text-xs text-muted-foreground line-through">{info.商品原价}</span>
             )}
@@ -377,6 +405,11 @@ function ResultCard({ item, onSetPrice, onAddToPurchase, selected, onToggleSelec
           <span className="truncate max-w-[120px]">{seller.卖家昵称 || info.卖家昵称 || '未知'}</span>
           <span className="shrink-0">{publishTime}</span>
         </div>
+        {crawlTime && (
+          <div className="mt-0.5 text-[10px] text-muted-foreground/70">
+            爬取: {crawlTime}
+          </div>
+        )}
         <div className="mt-1.5 flex items-center gap-1">
           <Button
             variant="outline"
@@ -933,6 +966,7 @@ export default function ResultsPage() {
                 <TableHead>平台</TableHead>
                 <TableHead>AI建议</TableHead>
                 <TableHead>发布时间</TableHead>
+                <TableHead>爬取时间</TableHead>
                 <TableHead className="text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -942,6 +976,7 @@ export default function ResultsPage() {
                 const ai = item.ai_analysis
                 const isRec = ai?.is_recommended === true
                 const isSelected = compareIds.has(info.商品ID)
+                const itemCurrency = item.currency || getPlatformCurrency(item.platform || 'xianyu')
                 return (
                   <TableRow key={info.商品ID} className={cn(isSelected && 'bg-blue-50')}>
                     <TableCell>
@@ -955,7 +990,9 @@ export default function ResultsPage() {
                         {info.商品标题}
                       </a>
                     </TableCell>
-                    <TableCell className="font-semibold text-red-600">{info.当前售价}</TableCell>
+                    <TableCell className="font-semibold text-red-600">
+                      {formatPriceWithCurrency(info.当前售价, itemCurrency)}
+                    </TableCell>
                     <TableCell>
                       {item.estimated_profit != null ? (
                         <span className={cn('text-xs font-semibold', item.estimated_profit > 0 ? 'text-emerald-600' : 'text-red-500')}>
@@ -972,6 +1009,7 @@ export default function ResultsPage() {
                       </span>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">{info.发布时间 || '未知'}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{item.爬取时间 || '—'}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button onClick={() => handleAddToPurchase(item)} className="text-xs text-blue-600 hover:underline whitespace-nowrap">采购</button>

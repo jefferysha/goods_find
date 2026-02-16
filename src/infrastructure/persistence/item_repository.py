@@ -2,6 +2,7 @@
 import json
 from typing import List, Dict, Any, Optional
 from src.infrastructure.persistence.sqlite_manager import get_db
+from src.domain.models.platform import PLATFORMS
 
 
 def parse_price(price_str: str) -> float:
@@ -72,7 +73,14 @@ def record_to_row(record: dict) -> dict:
         "raw_item_info": json.dumps(info, ensure_ascii=False),
         "raw_seller_info": json.dumps(seller, ensure_ascii=False),
         "raw_ai_analysis": json.dumps(ai, ensure_ascii=False),
+        "currency": record.get("currency") or _infer_currency(record.get("platform", "xianyu")),
     }
+
+
+def _infer_currency(platform: str) -> str:
+    """根据平台推断货币代码"""
+    p = PLATFORMS.get(platform)
+    return p.currency if p else "CNY"
 
 
 def row_to_record(row: dict) -> dict:
@@ -84,6 +92,7 @@ def row_to_record(row: dict) -> dict:
     raw_seller = json.loads(row.get("raw_seller_info") or "{}")
     raw_ai = json.loads(row.get("raw_ai_analysis") or "{}")
 
+    platform = row.get("platform", "xianyu")
     return {
         "爬取时间": row.get("crawl_time", ""),
         "搜索关键字": row.get("keyword", ""),
@@ -91,7 +100,8 @@ def row_to_record(row: dict) -> dict:
         "商品信息": raw_item,
         "卖家信息": raw_seller,
         "ai_analysis": raw_ai,
-        "platform": row.get("platform", "xianyu"),
+        "platform": platform,
+        "currency": row.get("currency") or _infer_currency(platform),
         # 价格本评估字段
         "category_id": row.get("category_id"),
         "category_name": row.get("category_name"),
@@ -118,7 +128,7 @@ class ItemRepository:
             await db.execute(
                 """
                 INSERT OR IGNORE INTO items (
-                    item_id, task_name, keyword, platform,
+                    item_id, task_name, keyword, platform, currency,
                     title, price, original_price, region,
                     publish_time, crawl_time, item_link, image_url,
                     want_count, view_count,
@@ -129,7 +139,7 @@ class ItemRepository:
                     seller_name, seller_credit, seller_registration,
                     raw_item_info, raw_seller_info, raw_ai_analysis
                 ) VALUES (
-                    :item_id, :task_name, :keyword, :platform,
+                    :item_id, :task_name, :keyword, :platform, :currency,
                     :title, :price, :original_price, :region,
                     :publish_time, :crawl_time, :item_link, :image_url,
                     :want_count, :view_count,
@@ -170,7 +180,7 @@ class ItemRepository:
                     await db.execute(
                         """
                         INSERT OR IGNORE INTO items (
-                            item_id, task_name, keyword, platform,
+                            item_id, task_name, keyword, platform, currency,
                             title, price, original_price, region,
                             publish_time, crawl_time, item_link, image_url,
                             want_count, view_count,
@@ -181,7 +191,7 @@ class ItemRepository:
                             seller_name, seller_credit, seller_registration,
                             raw_item_info, raw_seller_info, raw_ai_analysis
                         ) VALUES (
-                            :item_id, :task_name, :keyword, :platform,
+                            :item_id, :task_name, :keyword, :platform, :currency,
                             :title, :price, :original_price, :region,
                             :publish_time, :crawl_time, :item_link, :image_url,
                             :want_count, :view_count,

@@ -10,7 +10,8 @@ from fastapi.templating import Jinja2Templates
 from src.api.routes import tasks, logs, settings, prompts, results, login_state, websocket, accounts, pricing
 from src.api.routes import history, alerts, dashboard, favorites, platforms, auth
 from src.api.routes import price_book, purchases, inventory, profit, team, premium_map, bargain_radar
-from src.api.routes import bargain, seller_credit, cross_platform
+from src.api.routes import bargain, seller_credit, cross_platform, categories
+from src.api.routes.product_match import router as product_match_router
 from src.api.dependencies import set_process_service, set_scheduler_service
 from src.infrastructure.persistence.sqlite_manager import init_db
 from src.services.task_service import TaskService
@@ -111,6 +112,8 @@ app.include_router(bargain_radar.router)
 app.include_router(bargain.router)
 app.include_router(seller_credit.router)
 app.include_router(cross_platform.router)
+app.include_router(categories.router)
+app.include_router(product_match_router)
 
 # 挂载静态文件
 # 旧的静态文件目录（用于截图等）

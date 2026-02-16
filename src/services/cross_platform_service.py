@@ -2,14 +2,15 @@
 import statistics
 from typing import List, Dict, Any, Optional
 from src.infrastructure.persistence.sqlite_manager import get_db
-
-# 平台→货币映射
-PLATFORM_CURRENCY = {
-    "xianyu": "CNY",
-    "mercari": "JPY",
-}
+from src.domain.models.platform import PLATFORMS
 
 BASE_CURRENCY = "CNY"
+
+
+def get_platform_currency(platform_id: str) -> str:
+    """根据平台 ID 获取货币代码，默认 CNY"""
+    p = PLATFORMS.get(platform_id)
+    return p.currency if p else "CNY"
 
 
 def classify_arbitrage(price_gap_pct: float) -> str:
@@ -200,7 +201,7 @@ class CrossPlatformService:
             # 计算各平台统计
             platform_stats = []
             for plat, prices in by_platform.items():
-                currency = PLATFORM_CURRENCY.get(plat, "CNY")
+                currency = get_platform_currency(plat)
                 rate_key = f"{currency}_to_{BASE_CURRENCY}"
                 rate = rates.get(rate_key, 1.0) if currency != BASE_CURRENCY else 1.0
 
@@ -284,7 +285,7 @@ class CrossPlatformService:
         converted_prices = []
 
         for item in all_items:
-            currency = PLATFORM_CURRENCY.get(item["platform"], "CNY")
+            currency = get_platform_currency(item["platform"])
             rate_key = f"{currency}_to_{BASE_CURRENCY}"
             rate = rates.get(rate_key, 1.0) if currency != BASE_CURRENCY else 1.0
             converted = round(item["price"] * rate, 2)

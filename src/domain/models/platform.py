@@ -11,6 +11,8 @@ class PlatformInfo(BaseModel):
     color: str
     enabled: bool = False
     description: str = ""
+    currency: str = "CNY"
+    country: str = ""
 
 
 # 平台注册表
@@ -62,6 +64,8 @@ PLATFORMS: Dict[str, PlatformInfo] = {
         color="#FF0211",
         enabled=True,
         description="日本最大的二手交易平台",
+        currency="JPY",
+        country="JP",
     ),
 }
 

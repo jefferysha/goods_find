@@ -9,10 +9,9 @@ import {
   Minus,
   ExternalLink,
   Star,
-  BadgeJapaneseYen,
-  BadgeCent,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getPlatformName, getPlatformColor } from '@/lib/platforms'
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -57,16 +56,6 @@ const ARBITRAGE_LABEL: Record<string, string> = {
   none: '无套利',
 }
 
-const PLATFORM_LABEL: Record<string, string> = {
-  xianyu: '闲鱼',
-  mercari: 'Mercari',
-}
-
-const PLATFORM_ICON: Record<string, typeof BadgeCent> = {
-  xianyu: BadgeCent,
-  mercari: BadgeJapaneseYen,
-}
-
 function fmtPrice(val: number | null | undefined, currency = 'CNY'): string {
   if (val === null || val === undefined) return '-'
   const symbol = currency === 'JPY' ? '¥' : '¥'
@@ -106,12 +95,15 @@ function CategoryCard({
       <CardContent className="space-y-3 text-sm">
         {/* 各平台统计行 */}
         {category.platforms.map((ps) => {
-          const Icon = PLATFORM_ICON[ps.platform] ?? BadgeCent
+          const platformColor = getPlatformColor(ps.platform)
           return (
             <div key={ps.platform} className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Icon className="h-3.5 w-3.5" />
-                <span>{PLATFORM_LABEL[ps.platform] ?? ps.platform}</span>
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: platformColor }}
+                />
+                <span>{getPlatformName(ps.platform)}</span>
                 <span className="text-xs">({ps.item_count}件)</span>
               </div>
               <div className="font-mono text-foreground">
@@ -141,7 +133,7 @@ function CategoryCard({
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>最便宜</span>
           <Badge variant="secondary" className="text-[10px]">
-            {PLATFORM_LABEL[category.cheapest_platform] ?? category.cheapest_platform}
+            {getPlatformName(category.cheapest_platform)}
           </Badge>
         </div>
       </CardContent>
@@ -183,7 +175,7 @@ function ItemRow({ item }: { item: CrossPlatformItem }) {
         </div>
         <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
           <Badge variant="outline" className="text-[10px]">
-            {PLATFORM_LABEL[item.platform] ?? item.platform}
+            {getPlatformName(item.platform)}
           </Badge>
           <span>关键词: {item.keyword}</span>
           {item.seller_credit && <span>信誉: {item.seller_credit}</span>}

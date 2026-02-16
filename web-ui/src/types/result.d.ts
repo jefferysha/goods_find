@@ -51,6 +51,8 @@ export interface ResultItem {
   "卖家信息": SellerInfo;
   ai_analysis: AiAnalysis;
   platform?: string;
+  /** 商品价格货币代码, e.g. 'CNY', 'JPY' */
+  currency?: string;
   // 价格本评估字段
   category_id?: string;
   category_name?: string;

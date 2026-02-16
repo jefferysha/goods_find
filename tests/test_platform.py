@@ -81,5 +81,5 @@ def test_platform_info_fields_pdd():
 
 
 def test_platforms_dict_keys():
-    expected_ids = {"xianyu", "zhuanzhuan", "jd_used", "pdd_used", "taobao_used"}
+    expected_ids = {"xianyu", "zhuanzhuan", "jd_used", "pdd_used", "taobao_used", "mercari"}
     assert set(PLATFORMS.keys()) == expected_ids

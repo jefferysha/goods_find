@@ -44,6 +44,8 @@ const PremiumMapPage = lazyWithRetry(() => import('@/pages/PremiumMapPage'))
 const MarketTrendPage = lazyWithRetry(() => import('@/pages/MarketTrendPage'))
 const CompetitorPage = lazyWithRetry(() => import('@/pages/CompetitorPage'))
 const CrossPlatformPage = lazyWithRetry(() => import('@/pages/CrossPlatformPage'))
+const CategoryPage = lazyWithRetry(() => import('@/pages/CategoryPage'))
+const ProductMatchPage = lazyWithRetry(() => import('@/pages/ProductMatchPage'))
 
 function SuspenseWrapper({ children }: { children: ReactNode }) {
   return (
@@ -121,7 +123,9 @@ export const router = createBrowserRouter([
       { path: 'premium-map', element: <SuspenseWrapper><PremiumMapPage /></SuspenseWrapper> },
       { path: 'results', element: <SuspenseWrapper><ResultsPage /></SuspenseWrapper> },
       { path: 'cross-platform', element: <SuspenseWrapper><CrossPlatformPage /></SuspenseWrapper> },
+      { path: 'product-match', element: <SuspenseWrapper><ProductMatchPage /></SuspenseWrapper> },
       // 价格管理
+      { path: 'categories', element: <SuspenseWrapper><CategoryPage /></SuspenseWrapper> },
       { path: 'price-book', element: <SuspenseWrapper><PriceBookPage /></SuspenseWrapper> },
       { path: 'market-trend', element: <SuspenseWrapper><MarketTrendPage /></SuspenseWrapper> },
       { path: 'competitor', element: <SuspenseWrapper><CompetitorPage /></SuspenseWrapper> },
